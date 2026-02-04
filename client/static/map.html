@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drone Map + Rover Control</title>
+    <style>
+        body {
+            background: #0b0f14;
+            color: #e7eef7;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #mapCanvas {
+            background: #111;
+            border: 1px solid #555;
+            display: block;
+            margin-bottom: 15px;
+        }
+        .btn {
+            padding: 10px 14px;
+            margin-right: 6px;
+            background: #1a2230;
+            border: 1px solid #273244;
+            color: white;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+        .btn:hover { background: #4aa3ff; }
+        #log {
+            background: #0f141c;
+            border: 1px solid #273244;
+            padding: 10px;
+            height: 200px;
+            
+            overflow-y: auto;
+            white-space: pre-line;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Drone Map + Rover Control</h1>
+
+<canvas id="mapCanvas" width="600" height="600"></canvas>
+
+<div>
+    <button class="btn" onclick="sendCmd('MODE_CONTINUOUS')">Continuous Follow</button>
+    <button class="btn" onclick="sendCmd('MODE_COME_TO_ME')">Come To Me Mode</button>
+    <button class="btn" onclick="sendCmd('CMD_COME_TO_ME')">Come To Me NOW</button>
+</div>
+
+<h3>Log</h3>
+<div id="log"></div>
+
+<script>
+let canvas = document.getElementById("mapCanvas");
+let ctx = canvas.getContext("2d");
+let pxPerMeter = 50;
+let droneX = 0, droneY = 0;
+
+// =====================================================
+// WebSocket: VIO → updates drone position
+// =====================================================
+let ws = new WebSocket("ws://" + location.hostname + ":8765");
+ws.onmessage = (ev) => {
+    let p = ev.data.split(",");
+    droneX = parseFloat(p[1]);
+    droneY = parseFloat(p[2]);
+    drawMap();
+    log(`VIO x=${droneX}, y=${droneY}`);
+};
+
+// =====================================================
+// Draw map
+// =====================================================
+function drawMap() {
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    let sx = canvas.width/2 + droneX * pxPerMeter;
+    let sy = canvas.height/2 - droneY * pxPerMeter;
+
+    ctx.fillStyle = "yellow";
+    ctx.beginPath();
+    ctx.arc(sx, sy, 6, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function screenToWorld(px, py){
+    return {
+        x: (px - canvas.width/2) / pxPerMeter,
+        y: (canvas.height/2 - py) / pxPerMeter
+    };
+}
+
+// =====================================================
+// LEFT CLICK → Send GOTO x y
+// =====================================================
+canvas.addEventListener("click", function(e){
+    let rect = canvas.getBoundingClientRect();
+    let px = e.clientX - rect.left;
+    let py = e.clientY - rect.top;
+
+    let w = screenToWorld(px, py);
+    let x = w.x.toFixed(2);
+    let y = w.y.toFixed(2);
+
+    log(`CLICK → GOTO ${x}, ${y}`);
+
+    fetch("/api/rover-command", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({cmd:`GOTO ${x} ${y}`})
+    })
+    .then(r => r.text())
+    .then(t => log("[ROVER] " + t))
+    .catch(err => log("[ROVER ERROR] " + err));
+});
+
+// =====================================================
+// Send buttons
+// =====================================================
+function sendCmd(cmd){
+    log("SEND → " + cmd);
+    fetch("/api/rover-command", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({cmd:cmd})
+    });
+}
+
+function log(t){
+    let el = document.getElementById("log");
+    el.textContent += t + "\n";
+    el.scrollTop = el.scrollHeight;
+}
+</script>
+
+</body>
+</html>

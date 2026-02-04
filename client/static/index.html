@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Drone + Rover Control UI</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        #mapCanvas {
+            background: #111;
+            border: 1px solid #555;
+            display: block;
+            margin: 20px 0;
+        }
+        .map-controls button {
+            padding: 10px 14px;
+            margin-right: 6px;
+            background: #1a2230;
+            border: 1px solid #273244;
+            color: white;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+        .map-controls button:hover {
+            background: #4aa3ff;
+        }
+        .calibration-controls, .drone-controls {
+            margin-bottom: 20px; /* Add space between groups */
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <h1>Drone Interface + Rover Controller</h1>
+</header>
+
+<main>
+
+    <!-- VIDEO FEED -->
+    <section class="video-card">
+        <video id="video" autoplay playsinline muted></video>
+        <div class="controls">
+            <button id="connectBtn">Connect</button>
+            <button id="disconnectBtn" disabled>Disconnect</button>
+            <span id="status" class="status">idle</span>
+        </div>
+    </section>
+
+    <!-- MAP + ROVER -->
+    <section>
+        <h2>Rover Map</h2>
+
+        <canvas id="mapCanvas" width="600" height="600"></canvas>
+
+        <div class="map-controls">
+
+            <div class="calibration-controls">
+                <!-- 3-Point Calibration -->
+                <button id="calibStart">Save A (Start)</button>
+                <button id="calibRight">Save B (Right)</button>
+                <button id="calibForward">Save C (Forward)</button>
+                <button id="calibFinish">Finish Calibration</button>
+            </div>
+
+            <div class="drone-controls">
+                <!-- Drone Modes -->
+                <button onclick="sendCmd('MODE_CONTINUOUS')">Continuous Follow</button>
+                <button onclick="sendCmd('MODE_COME_TO_ME')">Come To Me Mode</button>
+                <button onclick="sendCmd('CMD_COME_TO_ME')">Come To Me NOW</button>
+                <!-- Recalibrate yaw -->
+                <button id="recalibrateBtn">Recalibrate Yaw</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- LOG -->
+    <section class="actions">
+        <div class="actions-header">
+            <button id="copyLogBtn" type="button">Copy log</button>
+        </div>
+
+        <pre id="log" class="log"></pre>
+        <div id="logResizer" class="log-resizer" title="Drag to resize logs"></div>
+    </section>
+
+</main>
+
+<footer>
+    <small>Drone + Rover UI — PFE Team</small>
+</footer>
+
+<script src="/static/app.js"></script>
+
+</body>
+</html>
