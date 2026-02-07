@@ -3,8 +3,8 @@ import subprocess
 import socket
 import time
 
-from client.server.server import get_R, get_T, get_calib
-from client.server.websocket_server import ws_broadcast
+from drone_infos.drone_data import get_R, get_T, get_calib
+from server.websocket_server import ws_broadcast
 
 
 
@@ -52,6 +52,7 @@ def vio_streamer(roverIp):
 
     while True:
         line = vio.stdout.readline()
+
         if not line: break
         line=line.strip()
 
@@ -59,7 +60,6 @@ def vio_streamer(roverIp):
         pose=pose_regex.search(line)
         rpy=rpy_regex.search(line)
         q=quality_regex.search(line)
-
         # If we don't have a full pose+orientation, ignore this line.
         if not pose or not rpy:
             continue
@@ -86,7 +86,6 @@ def vio_streamer(roverIp):
         yaw = normalize_angle(yaw_raw - INITIAL_YAW)
 
         latest_drone_local = (dx, dy, yaw)
-
         # Compute world coords for the UI only if the operator did a calibration
         if get_calib():
             world_x = get_R()[0][0]*dx + get_R()[0][1]*dy + get_T()[0]

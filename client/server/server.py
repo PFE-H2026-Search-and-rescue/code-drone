@@ -7,39 +7,22 @@ from pathlib import Path
 import math
 import socket
 
-from client.drone_infos.vio_streamer import get_latest_drone_local
-from client.server.websocket_server import ws_broadcast
+from drone_infos.vio_streamer import get_latest_drone_local
+from server.websocket_server import ws_broadcast
+from drone_infos.drone_data import set_R, set_T, get_R, get_T, set_calib
 
 # 3-point calibration storage (A,B,C) used to compute UI world transform
 A = None
 B = None
 C = None
 
-# Final transform for UI only: world = R * local + T
-# R is a 2x2 matrix, T is a 2-vector. Initially identity transform.
-R = [[1,0],[0,1]]
-T = (0,0)
-
-def get_R():
-    global R
-    return R
-
-def get_T():
-    global T
-    return T
-
-CALIBRATED = False  # flag used to switch between local and calibrated world coords
-
-def get_calib():
-    global CALIBRATED
-    return CALIBRATED
 
 # ============================================================
 # HTTP SERVER
 # ============================================================
 
 UI_LISTEN_ADDR = "0.0.0.0:8080"
-STATIC_DIR = Path(__file__).parent / "static"
+STATIC_DIR = Path(__file__).parent.parent / "static"
 
 MEDIAMTX_ORIGIN = "http://127.0.0.1:8889"
 ORIGIN = urllib.parse.urlsplit(MEDIAMTX_ORIGIN)
@@ -141,7 +124,7 @@ class Handler(BaseHTTPRequestHandler):
     def calib_finish(self):
         # Compute a simple 2D transform (rotation+translation) with A as origin, ux from A->B,
         # uy from A->C. This is a bit naive (no orthonormalization), but works OK for UI mapping.
-        global A, B, C, R, T, CALIBRATED
+        global A, B, C
 
         if A is None or B is None or C is None:
             # We don't throw 400; just tell the UI we need all points
@@ -162,20 +145,20 @@ class Handler(BaseHTTPRequestHandler):
         uy = (vy[0] / ln, vy[1] / ln)
 
         # R is column major-style here: columns are ux and uy
-        R = [
+        set_R([
             [ux[0], uy[0]],
             [ux[1], uy[1]]
-        ]
+        ])
 
         # T: translate so that world-origin sits at A
-        T = (
-            -Ax * R[0][0] - Ay * R[0][1],
-            -Ax * R[1][0] - Ay * R[1][1]
-        )
+        set_T((
+            -Ax * get_R()[0][0] - Ay * get_R()[0][1],
+            -Ax * get_R()[1][0] - Ay * get_R()[1][1]
+        ))
 
-        CALIBRATED = True
+        set_calib(True)
         # Notify the UI with the matrix and vector (so they can compute properly)
-        ws_broadcast(f"CALIB_DONE,{R[0][0]},{R[0][1]},{R[1][0]},{R[1][1]},{T[0]},{T[1]}")
+        ws_broadcast(f"CALIB_DONE,{get_R()[0][0]},{get_R()[0][1]},{get_R()[1][0]},{get_R()[1][1]},{get_T()[0]},{get_T()[1]}")
         return self._ok("Calibration complete")
 
     def send_rover_cmd(self):

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 
 import threading
 import argparse
@@ -7,9 +11,9 @@ import subprocess
 import time
 import socket
 
-from client.drone_infos.vio_streamer import vio_streamer
-from client.server.server import UI_LISTEN_ADDR, ThreadingHTTPServer, Handler
-from client.server.websocket_server import ws_broadcast, start_ws_server
+from drone_infos.vio_streamer import vio_streamer
+from server.server import UI_LISTEN_ADDR, ThreadingHTTPServer, Handler
+from server.websocket_server import ws_broadcast, start_ws_server
 
 # ============================================================
 # GLOBAL STATE
@@ -112,7 +116,7 @@ if __name__=="__main__":
 
     # On startup, restart QVIO services (needed for VOXL). Not ideal for dev workflow,
     # but helps keep things consistent when running on the actual hardware.
-    restart_voxl_services()
+    #restart_voxl_services()
 
     # Spawn the various service threads. I use daemon threads so it will exit cleanly
     # when the main thread (HTTP server) stops.
