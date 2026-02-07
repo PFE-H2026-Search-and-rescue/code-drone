@@ -5,7 +5,34 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from pathlib import Path
 import math
+import socket
 
+from client.drone_infos.vio_streamer import get_latest_drone_local
+from client.server.websocket_server import ws_broadcast
+
+# 3-point calibration storage (A,B,C) used to compute UI world transform
+A = None
+B = None
+C = None
+
+# Final transform for UI only: world = R * local + T
+# R is a 2x2 matrix, T is a 2-vector. Initially identity transform.
+R = [[1,0],[0,1]]
+T = (0,0)
+
+def get_R():
+    global R
+    return R
+
+def get_T():
+    global T
+    return T
+
+CALIBRATED = False  # flag used to switch between local and calibrated world coords
+
+def get_calib():
+    global CALIBRATED
+    return CALIBRATED
 
 # ============================================================
 # HTTP SERVER
@@ -93,21 +120,21 @@ class Handler(BaseHTTPRequestHandler):
     def calib_A(self):
         # Save the current drone local pose as calibration point A
         global A
-        A = latest_drone_local
+        A = get_latest_drone_local()
         ws_broadcast(f"CALIB_A,{A[0]},{A[1]}")
         return self._ok("Saved A")
 
     def calib_B(self):
         # Save the current drone local pose as calibration point B
         global B
-        B = latest_drone_local
+        B = get_latest_drone_local()
         ws_broadcast(f"CALIB_B,{B[0]},{B[1]}")
         return self._ok("Saved B")
 
     def calib_C(self):
         # Save the current drone local pose as calibration point C
         global C
-        C = latest_drone_local
+        C = get_latest_drone_local()
         ws_broadcast(f"CALIB_C,{C[0]},{C[1]}")
         return self._ok("Saved C")
 

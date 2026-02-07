@@ -1,3 +1,14 @@
+import re
+import subprocess
+import socket
+import time
+
+from client.server.server import get_R, get_T, get_calib
+from client.server.websocket_server import ws_broadcast
+
+
+
+
 # ============================================================
 # VIO STREAMER (where the FIX happens)
 # ============================================================
@@ -13,6 +24,12 @@ quality_regex = re.compile(r"\|\s*\d+\s*\|\s*(\d+)%")
 INITIAL_X=None  # Starting offset so we don't use absolute world coords
 INITIAL_Y=None
 INITIAL_YAW=None
+latest_drone_local = (0.0, 0.0, 0.0)  # dx, dy, yaw (deg) - local output coming from VOXL
+
+def get_latest_drone_local():
+    global latest_drone_local
+    return latest_drone_local
+
 
 def normalize_angle(a):
     # Keep angles between -180 and 180 for nicer UI
@@ -23,7 +40,7 @@ def normalize_angle(a):
 def vio_streamer(roverIp):
     # This is the meat: parse output, track initial offsets, compute local coords,
     # optionally map to world coords if calibration is done, then broadcast.
-    global latest_drone_local, INITIAL_X, INITIAL_Y, INITIAL_YAW, CALIBRATED
+    global latest_drone_local, INITIAL_X, INITIAL_Y, INITIAL_YAW
 
     vio = subprocess.Popen(
         ["sudo", "voxl-inspect-qvio"],
@@ -71,9 +88,9 @@ def vio_streamer(roverIp):
         latest_drone_local = (dx, dy, yaw)
 
         # Compute world coords for the UI only if the operator did a calibration
-        if CALIBRATED:
-            world_x = R[0][0]*dx + R[0][1]*dy + T[0]
-            world_y = R[1][0]*dx + R[1][1]*dy + T[1]
+        if get_calib():
+            world_x = get_R()[0][0]*dx + get_R()[0][1]*dy + get_T()[0]
+            world_y = get_R()[1][0]*dx + get_R()[1][1]*dy + get_T()[1]
         else:
             world_x, world_y = dx, dy
 

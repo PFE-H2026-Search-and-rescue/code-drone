@@ -3,33 +3,25 @@
 import threading
 import argparse
 import subprocess
-import re
+
 import time
 import socket
 
-
+from client.drone_infos.vio_streamer import vio_streamer
+from client.server.server import UI_LISTEN_ADDR, ThreadingHTTPServer, Handler
+from client.server.websocket_server import ws_broadcast, start_ws_server
 
 # ============================================================
 # GLOBAL STATE
 # ============================================================
 # Quick note: I'm a student so I kept things global for simplicity.
 # It's not the cleanest design, but it's easier to reason about for this project.
-latest_drone_local = (0.0, 0.0, 0.0)  # dx, dy, yaw (deg) - local output coming from VOXL
+
 latest_rover_x = 0.0  # rover-reported x
 latest_rover_y = 0.0  # rover-reported y
 latest_rover_o = 0.0  # rover orientation (heading)
 
-# 3-point calibration storage (A,B,C) used to compute UI world transform
-A = None
-B = None
-C = None
 
-CALIBRATED = False  # flag used to switch between local and calibrated world coords
-
-# Final transform for UI only: world = R * local + T
-# R is a 2x2 matrix, T is a 2-vector. Initially identity transform.
-R = [[1,0],[0,1]]
-T = (0,0)
 
 
 def restart_voxl_services():
@@ -83,17 +75,17 @@ def rover_udp_listener():
 # LOG THREAD
 # ============================================================
 # Simple periodic status dump originally used for debugging.
-def log_thread():
-    while True:
-        time.sleep(10)  # Increase sleep time to reduce log frequency
-        dx, dy, yaw = latest_drone_local
-        # Reduced logging to avoid performance issues
-        # print("\n===== STATUS =====")
-        # print(f"Drone Local:   x={dx:.2f}, y={dy:.2f}, yaw={yaw:.2f}")
-        # print(f"Rover:         x={latest_rover_x:.2f}, y={latest_rover_y:.2f}, o={latest_rover_o:.2f}")
-        # print(f"R matrix:      {R}")
-        # print(f"T vector:      {T}")
-        # print("==================\n")
+#def log_thread():
+#    while True:
+#        time.sleep(10)  # Increase sleep time to reduce log frequency
+#        dx, dy, yaw = latest_drone_local
+#        # Reduced logging to avoid performance issues
+#        # print("\n===== STATUS =====")
+#        # print(f"Drone Local:   x={dx:.2f}, y={dy:.2f}, yaw={yaw:.2f}")
+#        # print(f"Rover:         x={latest_rover_x:.2f}, y={latest_rover_y:.2f}, o={latest_rover_o:.2f}")
+#        # print(f"R matrix:      {R}")
+#        # print(f"T vector:      {T}")
+#        # print("==================\n")
 
 
 # ============================================================
@@ -127,5 +119,5 @@ if __name__=="__main__":
     threading.Thread(target=start_ws_server, daemon=True).start()
     threading.Thread(target=vio_streamer, args=(args.roverIp,), daemon=True).start()
     threading.Thread(target=rover_udp_listener, daemon=True).start()
-    threading.Thread(target=log_thread, daemon=True).start()
+    #threading.Thread(target=log_thread, daemon=True).start()
     main()
