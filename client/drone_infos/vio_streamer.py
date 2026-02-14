@@ -4,7 +4,6 @@ import socket
 import time
 
 from drone_infos.drone_data import get_R, get_T, get_calib
-from ros_listener import add_new_listener
 from server.websocket_server import ws_broadcast
 
 
@@ -27,10 +26,6 @@ INITIAL_Y=None
 INITIAL_YAW=None
 latest_drone_local = (0.0, 0.0, 0.0)  # dx, dy, yaw (deg) - local output coming from VOXL
 
-def test_callback(data):
-    print("You got mail")
-    print(data.data)
-
 def get_latest_drone_local():
     global latest_drone_local
     return latest_drone_local
@@ -47,7 +42,6 @@ def vio_streamer(roverIp):
     # optionally map to world coords if calibration is done, then broadcast.
     global latest_drone_local, INITIAL_X, INITIAL_Y, INITIAL_YAW
 
-    add_new_listener("vio_streamer", "qvio", test_callback)
     vio = subprocess.Popen(
         ["sudo", "voxl-inspect-qvio"],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
