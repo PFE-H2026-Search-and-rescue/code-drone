@@ -1,2 +1,1 @@
-rospy2
-std_msgs
+rclpy-intellisense
