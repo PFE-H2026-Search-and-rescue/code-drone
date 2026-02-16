@@ -15,13 +15,13 @@
 import rclpy
 from rclpy.node import Node
 
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import Image
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, LivelinessPolicy, HistoryPolicy
 
-class Point_Cloud_Node(Node):
+class Camera_Data_Node(Node):
 
     def __init__(self):
-        super().__init__('point_cloud_node')
+        super().__init__('camera_data_node')
         qos_profile = QoSProfile(
         reliability=ReliabilityPolicy.BEST_EFFORT,
         durability=DurabilityPolicy.VOLATILE,
@@ -30,29 +30,29 @@ class Point_Cloud_Node(Node):
         history=HistoryPolicy.KEEP_LAST
                                                                                     )
         self.subscription = self.create_subscription(
-            PointCloud2,
-            '/voxl_mapper_aligned_ptcloud',
-            self.point_cloud_callback,
+            Image,
+            '/tracking_down',
+            self.camera_callback,
             qos_profile=qos_profile)
 
-        self.get_logger().info('qvio node started')
+        self.get_logger().info('camera node started')
 
-    def point_cloud_callback(self, msg : PointCloud2):
-        self.get_logger().info("callback received")
+    def camera_callback(self, msg : Image):
+        self.get_logger().info("callback")
 
 
 
 def main(args=None):
     rclpy.init(args=args)
 
-    mapper_node = Point_Cloud_Node()
+    camera_node = Camera_Data_Node()
 
-    rclpy.spin(mapper_node)
+    rclpy.spin(camera_node)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    mapper_node.destroy_node()
+    camera_node.destroy_node()
     rclpy.shutdown()
 
 

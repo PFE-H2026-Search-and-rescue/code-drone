@@ -1,2 +1,3 @@
 rclpy-intellisense
 ros-nav-msgs
+ros-sensor-msgs
