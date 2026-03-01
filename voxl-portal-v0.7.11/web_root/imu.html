@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<title>ModalAI VOXL Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/w3.css">
+<link rel="icon" href="./images/portal.png">
+
+<style>
+    /*  Set up the Gyro and Accel control buttons*/
+    #gyroContainer, #accelContainer {
+    display: inline-block;
+    width: 48%; 
+    vertical-align: top; 
+    margin: 10px 0;
+    }
+
+    #gyroControls, #accelControls {
+        text-align: center; 
+        margin-bottom: 10px; 
+    }
+
+    #gyroControls h4, #accelControls h4 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+        color: #333;
+    }
+
+    #gyroControls button, #accelControls button {
+        margin: 5px;
+        padding: 5px 10px;
+        font-size: 14px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        transition: background-color 0.3s ease;
+    }
+
+    #gyroControls button:hover, #accelControls button:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<header>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+        $(function(){
+          $("#header").load("header.html", function(){
+            mode_btn.addEventListener("click", () => {
+                if (mode_btn.classList.contains("w3-black")) {
+                    var x = document.getElementById("button_text");
+                    x.textContent = "Dark";
+                    mode_btn.classList.replace("w3-black", "w3-white");
+                    document.body.style.background = "black";
+                    var all = document.getElementById("imu_center").getElementsByTagName("*");
+                    for (var i=0, max=all.length; i < max; i++) {
+                        if (all[i].tagName != "TR" && all[i].tagName != "TBODY" && all[i].tagName != "TH" && all[i].tagName != "TABLE")
+                            all[i].style.color = "white";
+                    }
+                    localStorage.setItem("dark_mode","true");
+                }
+                else {
+                    mode_btn.classList.replace("w3-white", "w3-black");
+                    var x = document.getElementById("button_text");
+                    x.textContent = "Light";
+                    document.body.style.background = "white";
+                    var all = document.getElementById("imu_center").getElementsByTagName("*");
+                    for (var i=0, max=all.length; i < max; i++) {
+                        if (all[i].tagName != "TR" && all[i].tagName != "TBODY" && all[i].tagName != "TH" && all[i].tagName != "TABLE")
+                            all[i].style.color = "black";
+                    }
+                    localStorage.setItem("dark_mode","false");
+                }
+            })
+            var dark_mode_status = localStorage.getItem("dark_mode");
+            if (dark_mode_status == "true"){
+                // we were in Dark on the previous page, so mimic thats
+                mode_btn.click();
+            }
+          });
+        });
+    </script>
+    <div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+        <h1>VOXL Web Portal</h1>
+    </div>
+</header>
+
+<script src="./js/3rd_party/Macy.js"></script>
+<script src="./js/3rd_party/jdataview.js"></script>
+<script src="./js/3rd_party/jparser.js"></script>
+<script src="./js/3rd_party/plotly-2.4.2.min.js"></script>
+<script type="text/javascript" src="./js/3rd_party/smoothie.js"></script>
+
+
+<center id="imu_center">
+
+<h3 id="imu_header">VOXL Imu Plotter</h3>
+
+
+<select id="imuSelector">
+    <option value="" disabled selected>Select an IMU</option>
+</select>
+<div id="imuStatus"></div> 
+
+<h4 id="header_label">IMU APPS</h4>
+
+<div id="smoothie_block">
+    <!-- Gyro Container -->
+    <div id="gyroContainer">
+        <div id="gyroControls">
+            <h4>Gyro Controls</h4>
+            <button id="gyroZoomIn">Zoom In</button>
+            <button id="gyroZoomOut">Zoom Out</button>
+            <button id="gyroResetZoom">Reset Zoom</button>
+        </div>
+
+        <div class="demo">
+            <input id="imu_gyro_c" type="checkbox" checked="1">
+            <a>Gyro (rad/s)</a><br>
+            <canvas id="gyro_canvas" width="100%" height="500px"></canvas>
+            <div id="gyro_key">
+                <span>KEY:</span><br>
+                <div class="box" style="background-color: #ff0000;"></div>
+                <span>X</span>
+                <div class="box" style="background-color: #00ff00;"></div>
+                <span>Y</span>
+                <div class="box" style="background-color: #0000ff;"></div>
+                <span>Z</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accel Container -->
+    <div id="accelContainer">
+        <div id="accelControls">
+            <h4>Accel Controls</h4>
+            <button id="accelZoomIn">Zoom In</button>
+            <button id="accelZoomOut">Zoom Out</button>
+            <button id="accelResetZoom">Reset Zoom</button>
+        </div>
+
+        <div class="demo">
+            <input id="imu_accel_c" type="checkbox" checked="1">
+            <a>Accel (m/s&sup2;)</a><br>
+            <canvas id="accel_canvas" width="100%" height="500px"></canvas>
+            <div id="accel_key">
+                <span>KEY:</span><br>
+                <div class="box" style="background-color: #ff0000;"></div>
+                <span>X</span>
+                <div class="box" style="background-color: #00ff00;"></div>
+                <span>Y</span>
+                <div class="box" style="background-color: #0000ff;"></div>
+                <span>Z</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+</center>
+
+<script src="./js/get_url.js"></script>
+<script>
+
+var url_base = get_url_base();
+var url_port = get_url_port();
+
+
+
+// defined height of all of our containers
+let container_height = 500;
+
+let masonry = new Macy({
+    container: '#smoothie_block',
+    trueOrder: false,
+    waitForImages: false,
+    useOwnImageLoader: false,
+    debug: true,
+    mobileFirst: true,
+    columns: 1,
+    margin: {
+        y: 16,
+        x: '2%',
+    },
+    breakAt: {
+    760: {
+      margin: {
+        x: 20,
+      },
+      columns: 2
+    }
+  },
+});
+
+// global variables
+let gyro_canvas = document.getElementById("gyro_canvas");
+let accel_canvas = document.getElementById("accel_canvas");
+
+// checkboxes
+let imu_gyro_c = document.getElementById("imu_gyro_c");
+let imu_accel_c = document.getElementById("imu_accel_c");
+
+// keys
+let gyro_key = document.getElementById("gyro_key");
+let accel_key = document.getElementById("accel_key");
+
+// listener functions for checkboxes
+imu_gyro_c.addEventListener("click", () => {
+    if (imu_gyro_c.checked){
+        gyro_canvas.classList.remove("w3-hide");
+        gyro_key.classList.remove("w3-hide");
+        gyro_canvas.height = container_height;
+    }
+    else {
+        gyro_canvas.classList.add("w3-hide");
+        gyro_key.classList.add("w3-hide");
+    }
+});
+
+imu_accel_c.addEventListener("click", () => {
+    if (imu_accel_c.checked){
+        accel_canvas.classList.remove("w3-hide");
+        accel_key.classList.remove("w3-hide");
+        accel_canvas.height = container_height;
+    }
+    else {
+        accel_canvas.classList.add("w3-hide");
+        accel_key.classList.add("w3-hide");
+    }
+});
+
+// smoothie variables
+var gyro_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: -6,
+    maxValue: 6,
+    responsive: true,
+    enableDpiScaling: false
+});
+
+var accel_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: -20,
+    maxValue: 20,
+    responsive: true,
+    enableDpiScaling: false
+});
+
+//function to fetch the list of currently active imus
+function updateImuList() {
+    fetch('/_cmd/list_imus') 
+        .then(function(response) {
+           
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            return response.text();
+        })
+        .then(function(text) {
+           
+            var imuList = text.trim().split(' ');
+
+            
+            console.log("Available IMUs:", imuList);
+
+            
+            updateDropdown(imuList);
+        })
+        .catch(function(error) {
+            
+            console.error('Error fetching IMU list:', error);
+        });
+}
+
+//function to update our dropdown of imus available for viewing
+function updateDropdown(imuList) {
+    var dropdown = document.getElementById('imuSelector');
+    var headerLabel = document.getElementById('header_label');
+    var statusDiv = document.getElementById('imuStatus');
+    
+    dropdown.innerHTML = '<option value="" disabled selected>Select an IMU</option>';
+
+    if (imuList.length === 1 && imuList[0] === '') {
+        
+        headerLabel.textContent = '';
+        statusDiv.textContent = 'No IMUs are currently running.';
+        statusDiv.style.color = 'red'; 
+    } else {
+        statusDiv.textContent = ''; 
+        imuList.forEach(function(imu) {
+            var option = document.createElement('option');
+            option.value = imu; 
+            option.text = imu;  
+            dropdown.appendChild(option);
+        });
+    }
+}
+
+// Default y-axis scales for the graphs
+var gyroScale = { min: -6, max: 6 }; 
+var accelScale = { min: -20, max: 20 }; 
+
+// Function to update the chart's y-axis scale
+function updateChartScale(chart, scale) {
+    chart.options.minValue = scale.min;
+    chart.options.maxValue = scale.max;
+    chart.streamTo(chart.canvas, 1000); 
+}
+
+// Gyro controls
+document.getElementById('gyroZoomIn').addEventListener('click', function() {
+    gyroScale.min /= 1.2;
+    gyroScale.max /= 1.2;
+    updateChartScale(gyro_smoothie, gyroScale);
+});
+
+document.getElementById('gyroZoomOut').addEventListener('click', function() {
+    gyroScale.min *= 1.2;
+    gyroScale.max *= 1.2;
+    updateChartScale(gyro_smoothie, gyroScale);
+});
+
+document.getElementById('gyroResetZoom').addEventListener('click', function() {
+    gyroScale.min = -6;
+    gyroScale.max = 6;
+    updateChartScale(gyro_smoothie, gyroScale);
+});
+
+// Accel controls
+document.getElementById('accelZoomIn').addEventListener('click', function() {
+    accelScale.min /= 1.2;
+    accelScale.max /= 1.2;
+    updateChartScale(accel_smoothie, accelScale);
+});
+
+document.getElementById('accelZoomOut').addEventListener('click', function() {
+    accelScale.min *= 1.2;
+    accelScale.max *= 1.2;
+    updateChartScale(accel_smoothie, accelScale);
+});
+
+document.getElementById('accelResetZoom').addEventListener('click', function() {
+    accelScale.min = -20;
+    accelScale.max = 20;
+    updateChartScale(accel_smoothie, accelScale);
+});
+
+// timeseries!
+var gyro_x = new TimeSeries();
+var gyro_y = new TimeSeries();
+var gyro_z = new TimeSeries();
+
+var accel_x = new TimeSeries();
+var accel_y = new TimeSeries();
+var accel_z = new TimeSeries();
+
+var imu_ws; 
+
+// set up our smoothie streams and assign our timeseries
+// only need to do these once, then we just update the timeseries objects
+gyro_smoothie.streamTo(gyro_canvas, 1000);
+gyro_smoothie.addTimeSeries(gyro_x, {lineWidth:2, strokeStyle: '#ff0000'});
+gyro_smoothie.addTimeSeries(gyro_y, {lineWidth:2, strokeStyle: '#00ff00'});
+gyro_smoothie.addTimeSeries(gyro_z, {lineWidth:2, strokeStyle: '#0000ff'});
+
+accel_smoothie.streamTo(accel_canvas, 1000);
+accel_smoothie.addTimeSeries(accel_x, {lineWidth:2, strokeStyle: '#ff0000'});
+accel_smoothie.addTimeSeries(accel_y, {lineWidth:2, strokeStyle: '#00ff00'});
+accel_smoothie.addTimeSeries(accel_z, {lineWidth:2, strokeStyle: '#0000ff'});
+
+var imu_ws;
+
+// Function to open WebSocket for respective IMU
+function initWebSocket(imuEndpoint) {
+    if (imu_ws) {
+        imu_ws.close(); 
+    }
+    imu_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/" + imuEndpoint);
+    imu_ws.binaryType = "arraybuffer";
+
+
+    imu_ws.onmessage = function (evt) {
+    var msg = evt.data;
+    var parser = new jParser(msg, {
+        imu_data: {
+            magic_number: 'uint32',
+            accl_ms2: ['array', 'float32', 3],
+            gyro_rad: ['array', 'float32', 3],
+            temp_c: 'float32',
+            timestamp_ns: 'uint64'
+        },
+    });
+
+    var curr_imu = parser.parse('imu_data');
+
+    gyro_x.append(new Date().getTime(), curr_imu.gyro_rad[0]);
+    gyro_y.append(new Date().getTime(), curr_imu.gyro_rad[1]);
+    gyro_z.append(new Date().getTime(), curr_imu.gyro_rad[2]);
+
+    accel_x.append(new Date().getTime(), curr_imu.accl_ms2[0]);
+    accel_y.append(new Date().getTime(), curr_imu.accl_ms2[1]);
+    accel_z.append(new Date().getTime(), curr_imu.accl_ms2[2]);
+
+    masonry.recalculate(true, true);
+}
+}
+
+// Event listener for imu switch
+document.getElementById('imuSelector').addEventListener('change', function() {
+    var selectedIMU = this.value;
+    var headerLabel = document.getElementById('header_label');
+
+    gyro_x.clear();
+    gyro_y.clear();
+    gyro_z.clear();
+    accel_x.clear();
+    accel_y.clear();
+    accel_z.clear();
+
+    headerLabel.textContent = selectedIMU;
+    if (selectedIMU === 'imu_iim'){
+        initWebSocket('imutdk');
+    }
+    else {
+        initWebSocket('imu');
+    }
+});
+
+
+setInterval(updateImuList, 1000);
+setInterval(updateChartScale, 1000);
+</script>
+
+</body>
+</html>

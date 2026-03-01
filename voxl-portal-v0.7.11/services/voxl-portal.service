@@ -1,0 +1,26 @@
+#
+# Copyright (c) 2023 ModalAI, Inc.
+#
+
+[Unit]
+Description=voxl-portal
+SourcePath=/usr/bin/voxl-portal
+After=voxl-wait-for-fs.service
+Requires=voxl-wait-for-fs.service
+
+[Service]
+User=root
+Type=simple
+PIDFile=/run/voxl-portal.pid
+ExecStart=/usr/bin/voxl-portal
+
+
+# allow restarting on failure, but limit this to 3 retries per 30 second period
+Restart=on-failure
+RestartSec=2s
+StartLimitBurst=3
+StartLimitInterval=30s
+
+[Install]
+WantedBy=multi-user.target
+

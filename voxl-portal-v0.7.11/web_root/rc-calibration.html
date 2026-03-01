@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+	<title>ModalAI VOXL Portal</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="./css/w3.css">
+	<link rel="stylesheet" href="./css/xterm.min.css">
+	<link rel="icon" href="./images/portal.png">
+    
+    <style> 
+        body {
+            margin: 0;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .bar-container {
+            position: relative;
+            width: 550px;
+            height: 50px;
+            margin-left: 50px;
+            background-color: #ddd;
+            border-radius:25px;
+        }
+
+        .bar-container-small {
+            position: relative;
+            width: 275px;
+            height: 25px;
+            background-color: #ddd;
+            border-radius:12.5px;
+        }
+
+        .bar {
+            width: 100%;
+            height: 100%;
+            background-color: #007bff;
+        }
+
+        .ball {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: black;
+            border-radius: 50%;
+            transition: left 0.1s ease;
+        }
+
+
+        .ball-small {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translate(-50%, -50%);
+            width: 25px;
+            height: 25px;
+            background: black;
+            border-radius: 50%;
+            transition: left 0.1s ease;
+        }
+        
+        .row {
+            display: flex;
+            border: 2px;
+            border: red;
+        }
+
+        .column {
+            padding-left: 75px;
+            padding-right: 75px;
+            flex: 50%;
+        }
+
+        .top {
+            font-size: 20px;
+            padding-bottom: 10px;
+        }
+        
+        .calibration-img {
+            margin-bottom: 10px;
+            margin-left: 10px;
+            border-width: 2px;
+            border-color: black;
+        }
+    
+    </style>
+	<header>
+		<script src="./js/3rd_party/jquery-3.6.0.js"></script>
+		<script src="./js/3rd_party/xterm.min.js"></script>
+		<script>
+		$(function(){
+			$("#header").load("header.html");
+		});
+		</script>
+		<div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+			<h1>VOXL Web Portal</h1>
+		</div>
+	</header>
+
+	<body>
+        <div class="top">
+            <div>
+                <button id="cancelCalButton" onClick="cancelCalButtonClicked()">Cancel</button>
+                <button id="nextButton" onClick="nextButtonClicked()">Next</button>
+                <button id="calibrateRCButton" onClick="calibrateRC()">Calibrate</button>
+                <select id="mode-select">
+                    <option value="mode2">Mode 2</option>
+                    <option value="mode1">Mode 1</option>
+                </select>
+            </div>
+            <div id="displayText">
+            </div>
+        </div>
+        <img id="calibration_img" class="calibration-img" src="images/radioCenter.png">
+        <div class="row">
+            <div class="column">
+                <div>
+                    Roll
+                </div>
+                <div class="bar-container">
+                    <div class="ball" id="rollBall"></div>
+                </div>
+                <div>
+                    Pitch
+                </div>
+                <div class="bar-container">
+                    <div class="ball" id="pitchBall"></div>
+                </div>
+                <div>
+                    Yaw
+                </div>
+                <div class="bar-container">
+                    <div class="ball" id="yawBall"></div>
+                </div>
+                <div>
+                    Throttle
+                </div>
+                <div class="bar-container">
+                    <div class="ball" id="throttleBall"></div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="row">
+                    <div class="column">
+                        <div>
+                            1
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball1"></div>
+                        </div>
+                        <div>
+                            2
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball2"></div>
+                        </div>
+                        <div>
+                            3
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball3"></div>
+                        </div>
+                        <div>
+                            4
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball4"></div>
+                        </div>
+                        <div>
+                            5
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball5"></div>
+                        </div>
+                        <div>
+                            6
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball6"></div>
+                        </div>
+                        <div>
+                            7
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball7"></div>
+                        </div>
+                        <div>
+                            8
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball8"></div>
+                        </div>
+                        <div>
+                            9
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball9"></div>
+                        </div>
+                    </div>
+                    <div class="right-side-column">
+                        <div>
+                            10
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball10"></div>
+                        </div>
+                        <div>
+                            11
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball11"></div>
+                        </div>
+                        <div>
+                            12
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball12"></div>
+                        </div>
+                        <div>
+                            13
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball13"></div>
+                        </div>
+                        <div>
+                            14
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball14"></div>
+                        </div>
+                        <div>
+                            15
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball15"></div>
+                        </div>
+                        <div>
+                            16
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball16"></div>
+                        </div>
+                        <div>
+                            17
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball17"></div>
+                        </div>
+                        <div>
+                            18
+                        </div>
+                        <div class="bar-container-small">
+                            <div class="ball-small" id="ball18"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+	</body>
+
+    <script src="./js/get_url.js"></script>
+    <script src="./js/rc_calibration.js"></script>
+</html>

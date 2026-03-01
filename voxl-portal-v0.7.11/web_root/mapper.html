@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<title>ModalAI VOXL Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/w3.css">
+<link rel="icon" href="./images/portal.png">
+
+<header>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+    $(function(){
+      $("#header").load("header.html");
+    });
+    </script>
+    <div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+        <h1>VOXL Web Portal</h1>
+    </div>
+</header>
+<body>
+    <div class="w3-display-left">
+        <div class="w3-dropdown-hover">
+             <button class="w3-button w3-green">
+            Control Options &#9660;
+        </button>
+        <div id="control_opts" class="w3-dropdown-content w3-bar-block w3-border" >
+            <a class="w3-bar-item w3-button w3-green w3-border"  id="orbit_controls">Orbit Control</a>
+            <a class="w3-bar-item w3-button w3-green w3-border"  id="fly_controls">Fly Control</a>
+            <a class="w3-bar-item w3-button w3-green w3-border"  id="fpv_mode">FPV Mode</a>
+        </div>
+        </div>
+       
+    </div>
+    <div class="w3-container">
+        <div class="w3-display-topmiddle" style="margin-top: 64px; display: table;">
+            <button class="w3-button w3-dark-grey" style="float: left;" id="3d">3D View</button>
+            <button class="w3-button w3-blue-grey" style="float: left;" id="2d">2D View</button>
+        </div>
+
+        <div id="stream_div" class="w3-display-left resizable">
+            <h3 id = "cam_name" style = "text-align: center; color: white;"></h3>
+            <button id="stream_remove" class="w3-hide w3-button w3-red" style = "position: absolute; top: 5px; right: 5px; opacity: 40%;">x</button>
+            <img src="" id="stream0" class="w3-hide">
+            <!--<img src="" id="stream0" class="w3-hide" height="35%" width="35%" object-fit: cover/>-->
+        </div>
+        <div class="w3-display-middle" style = "top: 7%;">
+            <div id="streamAcc" class="w3-hide w3-white w3-card" style = "position: relative;">
+                <div id = "dropdown_vertical_streamAcc" class = "w3-bar" style = "margin: 0; position: absolute; top: 50px; left: 50%; width: max-content; transform: translate(-50%, 0%); flex-wrap: wrap; flex-direction: row;">
+
+                </div>
+            </div>
+            <button class="w3-button w3-dark-grey" id="stream_add">
+                <img src="images/tv-icon.png"/>
+            </button>
+            <!--<button id="stream_remove" class="w3-hide w3-button w3-red">x</button>-->
+        </div>
+
+        <div class="w3-display-right">
+            <button class="w3-hide w3-button w3-block w3-blue" id="plan_action">Plan Home</button>
+            <button class="w3-hide w3-button w3-block w3-blue" id="plan_point_action">Plan to a Point</button>
+            <button class="w3-hide w3-button w3-block w3-green" id="plan_point_go">GO!</button>
+            <button class="w3-hide w3-button w3-block w3-red" id="plan_point_back">Back</button>
+            <button class="w3-hide w3-button w3-block w3-blue" id="load_action">Load Map</button>
+            <form id="load_form" style="display: none;">
+                <span class="w3-tag w3-blue">File Name:</span>
+                <input type="text" id="load_file_name" name="load_file_name" onkeydown="return (event.keyCode!=13);"><br>
+                <button class="w3-button w3-block w3-blue" type='button' id="load_sub_action" >Load Map</button>
+                <button class="w3-button w3-block w3-red" type='button' id="load_back">Back</button>
+            </form>
+            <button class="w3-hide w3-button w3-block w3-blue" id="save_action">Save Map</button>
+            <form id="save_form" style="display: none;">
+                <span class="w3-tag w3-blue">File Name:</span>
+                <input type="text" id="save_file_name" name="save_file_name" onkeydown="return (event.keyCode!=13);"><br>
+                <span class="w3-tag w3-orange">Mesh Type:</span>
+                <input class="w3-radio" type="radio" id="mesh_ply_radio" name="mesh_radio" value="PLY" checked>
+                <label>.ply</label>
+                <input class="w3-radio" type="radio" id="mesh_obj_radio" name="mesh_radio" value="OBJ">
+                <label>.obj</label>
+                <input class="w3-radio" type="radio" id="mesh_gltf_radio" name="mesh_radio" value="GLTF">
+                <label>.gltf</label>
+                <button class="w3-button w3-block w3-blue" type='button' id="save_sub_action" >Save Map</button>
+                <button class="w3-button w3-block w3-red" type='button' id="save_back">Back</button>
+            </form>
+            <button class="w3-hide w3-button w3-block w3-blue" id="download_action">Download Map</button>
+            <form id="download_form" style="display: none;">
+                <span class="w3-tag w3-orange">Mesh Type:</span>
+                <input class="w3-radio" type="radio" id="dl_mesh_ply_radio" name="dl_mesh_radio" value="PLY" checked>
+                <label>.ply</label>
+                <input class="w3-radio" type="radio" id="dl_mesh_obj_radio" name="dl_mesh_radio" value="OBJ">
+                <label>.obj</label>
+                <input class="w3-radio" type="radio" id="dl_mesh_gltf_radio" name="dl_mesh_radio" value="GLTF">
+                <label>.gltf</label>
+                <button class="w3-button w3-block w3-blue" type='button' id="download_sub_action">Download Map</button>
+                <button class="w3-button w3-block w3-red" type='button' id="download_back">Back</button>
+            </form>
+            <button class="w3-hide w3-button w3-block w3-blue" id="clear_action">Clear Map</button>
+            <button class="w3-hide w3-button w3-block w3-blue" id="reset_action">Reset VIO</button>
+            <button class="w3-hide w3-hide w3-button w3-block w3-blue" id="clear_paths">Clear Paths</button>
+            <button class="w3-hide w3-button w3-block w3-green" id="pose_btn">Position</button>
+            <button class="w3-hide w3-button w3-block w3-red" id="ptcloud_btn">Debug Pointcloud</button>
+            <button class="w3-hide w3-button w3-block w3-red" id="esdf_btn">Debug ESDF</button>
+            <div style="height: 50px;"></div>
+            <button class="w3-hide w3-button w3-block w3-blue" id="call_robot">Call robot</button>
+        </div>
+
+        <div class="w3-show w3-padding-32 w3-display-bottommiddle">
+            <div class="alert w3-hide" id="warning">
+                <span class="closebtn" id="warning_close">&times;</span>
+                MAKE SURE YOU ARE FOLLOWING ALL PROPER SAFETY PROTOCOLS BEFORE ATTEMPTING AUTONOMOUS FLIGHT.<br>
+                ModalAI is NOT responsible for any damages caused by flight path.
+            </div>
+            <button class="w3-hide  w3-button w3-block w3-green" id="path_go">Follow Path</button>
+            <div class = "w3-show w3-blue w3-container" id="slider_label" style="text-align: center;">
+                2D Slice Height
+            </div>
+            <input id="2d_slider" type="range" min="0" max="100" class="w3-show slider_"/>
+            <button class="w3-hide  w3-button w3-block w3-red" id="path_abort">ABORT</button>
+            <!-- <button class="w3-hide  w3-button w3-block w3-yellow" id="path_pause">Pause Path</button>
+            <button class="w3-hide  w3-button w3-block w3-blue" id="path_store">Store Path</button>
+            <button class="w3-hide  w3-button w3-block w3-blue" id="path_resume">Resume Path</button> -->
+        </div>
+    </div>
+    <div id="inset" class = "w3-display-bottomright"></div>
+
+    <script src="./js/3rd_party/jdataview.js"></script>
+    <script src="./js/3rd_party/jparser.js"></script>
+    <script src="./js/3rd_party/math.min.js"></script>
+
+    <script src="./js/get_url.js"></script>
+    <script>
+        var script = document.createElement("script");
+        script.type = "module";
+        script.src = "./js/mapper.js";
+        document.getElementsByTagName("body")[0].appendChild(script);
+    </script>
+</body>
+
+</html>

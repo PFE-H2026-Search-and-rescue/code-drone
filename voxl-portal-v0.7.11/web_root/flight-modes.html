@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html>
+	<title>ModalAI VOXL Portal</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="./css/w3.css">
+	<link rel="stylesheet" href="./css/xterm.min.css">
+	<link rel="icon" href="./images/portal.png">
+    
+    <style> 
+        body {
+            margin: 0;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .column {
+            float: left;
+            width: 15%;
+        }
+
+        .column-sub {
+            padding-left: 75px;
+            padding-right: 75px;
+            flex: 50%;
+        }
+
+        .row {
+            display: flex;
+            border: 2px;
+            border: red;
+        }
+
+
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        .bar-container-small {
+            position: relative;
+            width: 275px;
+            height: 25px;
+            background-color: #ddd;
+            border-radius:12.5px;
+        }
+
+        .ball-small {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translate(-50%, -50%);
+            width: 25px;
+            height: 25px;
+            background: black;
+            border-radius: 50%;
+            transition: left 0.1s ease;
+        }
+
+    </style>
+	<header>
+		<script src="./js/3rd_party/jquery-3.6.0.js"></script>
+		<script src="./js/3rd_party/xterm.min.js"></script>
+		<script>
+		$(function(){
+			$("#header").load("header.html");
+		});
+		</script>
+		<div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+			<h1>VOXL Web Portal</h1>
+		</div>
+	</header>
+	<body>
+        <div class="row">
+            <div class="column">
+                Flight Mode Settings
+                <div>
+                    Mode Channel
+                </div>
+                <div>
+                    <select id="mode-channel-select">
+                        <option value="0">Unassigned</option>
+                        <option value="1">Channel 1</option>
+                        <option value="2">Channel 2</option>
+                        <option value="3">Channel 3</option>
+                        <option value="4">Channel 4</option>
+                        <option value="5">Channel 5</option>
+                        <option value="6">Channel 6</option>
+                        <option value="7">Channel 7</option>
+                        <option value="8">Channel 8</option>
+                        <option value="9">Channel 9</option>
+                        <option value="10">Channel 10</option>
+                        <option value="11">Channel 11</option>
+                        <option value="12">Channel 12</option>
+                        <option value="13">Channel 13</option>
+                        <option value="14">Channel 14</option>
+                        <option value="15">Channel 15</option>
+                        <option value="16">Channel 16</option>
+                        <option value="17">Channel 17</option>
+                        <option value="18">Channel 18</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Flight Mode 1
+                </div>
+                <div>
+                    <select id="flight-mode-1-select">
+                        <option value="-1">Unassigned</option>
+                        <option value="0">Manual</option>
+                        <option value="1">Altitude</option>
+                        <option value="2">Position</option>
+                        <option value="3">Mission</option>
+                        <option value="4">Hold</option>
+                        <option value="5">Return</option>
+                        <option value="6">Acro</option>
+                        <option value="7">Offboard</option>
+                        <option value="8">Stabelized</option>
+                        <option value="9">Position Slow</option>
+                        <option value="10">Takeoff</option>
+                        <option value="11">Land</option>
+                        <option value="12">Follow Me</option>
+                        <option value="13">Precision Land</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Flight Mode 2
+                </div>
+                <div>
+                    <select id="flight-mode-2-select">
+                        <option value="-1">Unassigned</option>
+                        <option value="0">Manual</option>
+                        <option value="1">Altitude</option>
+                        <option value="2">Position</option>
+                        <option value="3">Mission</option>
+                        <option value="4">Hold</option>
+                        <option value="5">Return</option>
+                        <option value="6">Acro</option>
+                        <option value="7">Offboard</option>
+                        <option value="8">Stabelized</option>
+                        <option value="9">Position Slow</option>
+                        <option value="10">Takeoff</option>
+                        <option value="11">Land</option>
+                        <option value="12">Follow Me</option>
+                        <option value="13">Precision Land</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Flight Mode 3
+                </div>
+                <div>
+                    <select id="flight-mode-3-select">
+                        <option value="-1">Unassigned</option>
+                        <option value="0">Manual</option>
+                        <option value="1">Altitude</option>
+                        <option value="2">Position</option>
+                        <option value="3">Mission</option>
+                        <option value="4">Hold</option>
+                        <option value="5">Return</option>
+                        <option value="6">Acro</option>
+                        <option value="7">Offboard</option>
+                        <option value="8">Stabelized</option>
+                        <option value="9">Position Slow</option>
+                        <option value="10">Takeoff</option>
+                        <option value="11">Land</option>
+                        <option value="12">Follow Me</option>
+                        <option value="13">Precision Land</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Flight Mode 4
+                </div>
+                <div>
+                    <select id="flight-mode-4-select">
+                        <option value="-1">Unassigned</option>
+                        <option value="0">Manual</option>
+                        <option value="1">Altitude</option>
+                        <option value="2">Position</option>
+                        <option value="3">Mission</option>
+                        <option value="4">Hold</option>
+                        <option value="5">Return</option>
+                        <option value="6">Acro</option>
+                        <option value="7">Offboard</option>
+                        <option value="8">Stabelized</option>
+                        <option value="9">Position Slow</option>
+                        <option value="10">Takeoff</option>
+                        <option value="11">Land</option>
+                        <option value="12">Follow Me</option>
+                        <option value="13">Precision Land</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Flight Mode 5
+                </div>
+                <div>
+                    <select id="flight-mode-5-select">
+                        <option value="-1">Unassigned</option>
+                        <option value="0">Manual</option>
+                        <option value="1">Altitude</option>
+                        <option value="2">Position</option>
+                        <option value="3">Mission</option>
+                        <option value="4">Hold</option>
+                        <option value="5">Return</option>
+                        <option value="6">Acro</option>
+                        <option value="7">Offboard</option>
+                        <option value="8">Stabelized</option>
+                        <option value="9">Position Slow</option>
+                        <option value="10">Takeoff</option>
+                        <option value="11">Land</option>
+                        <option value="12">Follow Me</option>
+                        <option value="13">Precision Land</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Flight Mode 6
+                </div>
+                <div>
+                    <select id="flight-mode-6-select">
+                        <option value="-1">Unassigned</option>
+                        <option value="0">Manual</option>
+                        <option value="1">Altitude</option>
+                        <option value="2">Position</option>
+                        <option value="3">Mission</option>
+                        <option value="4">Hold</option>
+                        <option value="5">Return</option>
+                        <option value="6">Acro</option>
+                        <option value="7">Offboard</option>
+                        <option value="8">Stabelized</option>
+                        <option value="9">Position Slow</option>
+                        <option value="10">Takeoff</option>
+                        <option value="11">Land</option>
+                        <option value="12">Follow Me</option>
+                        <option value="13">Precision Land</option>
+                    </select>
+                </div>
+            </div>
+            <div class="column">
+                Switch Settings
+                <div>
+                    Arm switch channel
+                </div>
+                <div>
+                    <select id="arm-select">
+                        <option value="0">Unassigned</option>
+                        <option value="1">Channel 1</option>
+                        <option value="2">Channel 2</option>
+                        <option value="3">Channel 3</option>
+                        <option value="4">Channel 4</option>
+                        <option value="5">Channel 5</option>
+                        <option value="6">Channel 6</option>
+                        <option value="7">Channel 7</option>
+                        <option value="8">Channel 8</option>
+                        <option value="9">Channel 9</option>
+                        <option value="10">Channel 10</option>
+                        <option value="11">Channel 11</option>
+                        <option value="12">Channel 12</option>
+                        <option value="13">Channel 13</option>
+                        <option value="14">Channel 14</option>
+                        <option value="15">Channel 15</option>
+                        <option value="16">Channel 16</option>
+                        <option value="17">Channel 17</option>
+                        <option value="18">Channel 18</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Emergency kill switch channel
+                </div>
+                <div>
+                    <select id="kill-select">
+                        <option value="0">Unassigned</option>
+                        <option value="1">Channel 1</option>
+                        <option value="2">Channel 2</option>
+                        <option value="3">Channel 3</option>
+                        <option value="4">Channel 4</option>
+                        <option value="5">Channel 5</option>
+                        <option value="6">Channel 6</option>
+                        <option value="7">Channel 7</option>
+                        <option value="8">Channel 8</option>
+                        <option value="9">Channel 9</option>
+                        <option value="10">Channel 10</option>
+                        <option value="11">Channel 11</option>
+                        <option value="12">Channel 12</option>
+                        <option value="13">Channel 13</option>
+                        <option value="14">Channel 14</option>
+                        <option value="15">Channel 15</option>
+                        <option value="16">Channel 16</option>
+                        <option value="17">Channel 17</option>
+                        <option value="18">Channel 18</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Offboard switch channel
+                </div>
+                <div>
+                    <select id="offboard-select">
+                        <option value="0">Unassigned</option>
+                        <option value="1">Channel 1</option>
+                        <option value="2">Channel 2</option>
+                        <option value="3">Channel 3</option>
+                        <option value="4">Channel 4</option>
+                        <option value="5">Channel 5</option>
+                        <option value="6">Channel 6</option>
+                        <option value="7">Channel 7</option>
+                        <option value="8">Channel 8</option>
+                        <option value="9">Channel 9</option>
+                        <option value="10">Channel 10</option>
+                        <option value="11">Channel 11</option>
+                        <option value="12">Channel 12</option>
+                        <option value="13">Channel 13</option>
+                        <option value="14">Channel 14</option>
+                        <option value="15">Channel 15</option>
+                        <option value="16">Channel 16</option>
+                        <option value="17">Channel 17</option>
+                        <option value="18">Channel 18</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Landing gear switch channel
+                </div>
+                <div>
+                    <select id="landing-select">
+                        <option value="0">Unassigned</option>
+                        <option value="1">Channel 1</option>
+                        <option value="2">Channel 2</option>
+                        <option value="3">Channel 3</option>
+                        <option value="4">Channel 4</option>
+                        <option value="5">Channel 5</option>
+                        <option value="6">Channel 6</option>
+                        <option value="7">Channel 7</option>
+                        <option value="8">Channel 8</option>
+                        <option value="9">Channel 9</option>
+                        <option value="10">Channel 10</option>
+                        <option value="11">Channel 11</option>
+                        <option value="12">Channel 12</option>
+                        <option value="13">Channel 13</option>
+                        <option value="14">Channel 14</option>
+                        <option value="15">Channel 15</option>
+                        <option value="16">Channel 16</option>
+                        <option value="17">Channel 17</option>
+                        <option value="18">Channel 18</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Loiter switch channel
+                </div>
+                <div>
+                    <select id="loiter-select">
+                        <option value="0">Unassigned</option>
+                        <option value="1">Channel 1</option>
+                        <option value="2">Channel 2</option>
+                        <option value="3">Channel 3</option>
+                        <option value="4">Channel 4</option>
+                        <option value="5">Channel 5</option>
+                        <option value="6">Channel 6</option>
+                        <option value="7">Channel 7</option>
+                        <option value="8">Channel 8</option>
+                        <option value="9">Channel 9</option>
+                        <option value="10">Channel 10</option>
+                        <option value="11">Channel 11</option>
+                        <option value="12">Channel 12</option>
+                        <option value="13">Channel 13</option>
+                        <option value="14">Channel 14</option>
+                        <option value="15">Channel 15</option>
+                        <option value="16">Channel 16</option>
+                        <option value="17">Channel 17</option>
+                        <option value="18">Channel 18</option>
+                    </select>
+                </div>
+        
+                <div>
+                    Return switch channel
+                </div>
+                <div>
+                    <select id="return-select">
+                        <option value="0">Unassigned</option>
+                        <option value="1">Channel 1</option>
+                        <option value="2">Channel 2</option>
+                        <option value="3">Channel 3</option>
+                        <option value="4">Channel 4</option>
+                        <option value="5">Channel 5</option>
+                        <option value="6">Channel 6</option>
+                        <option value="7">Channel 7</option>
+                        <option value="8">Channel 8</option>
+                        <option value="9">Channel 9</option>
+                        <option value="10">Channel 10</option>
+                        <option value="11">Channel 11</option>
+                        <option value="12">Channel 12</option>
+                        <option value="13">Channel 13</option>
+                        <option value="14">Channel 14</option>
+                        <option value="15">Channel 15</option>
+                        <option value="16">Channel 16</option>
+                        <option value="17">Channel 17</option>
+                        <option value="18">Channel 18</option>
+                    </select>
+                </div>
+            </div>
+            <div class="column">
+                <div class="column">
+                    <div class="row">
+                        <div class="column-sub">
+                            <div>
+                                1
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball1"></div>
+                            </div>
+                            <div>
+                                2
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball2"></div>
+                            </div>
+                            <div>
+                                3
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball3"></div>
+                            </div>
+                            <div>
+                                4
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball4"></div>
+                            </div>
+                            <div>
+                                5
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball5"></div>
+                            </div>
+                            <div>
+                                6
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball6"></div>
+                            </div>
+                            <div>
+                                7
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball7"></div>
+                            </div>
+                            <div>
+                                8
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball8"></div>
+                            </div>
+                            <div>
+                                9
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball9"></div>
+                            </div>
+                        </div>
+                        <div class="column-sub">
+                            <div>
+                                10
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball10"></div>
+                            </div>
+                            <div>
+                                11
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball11"></div>
+                            </div>
+                            <div>
+                                12
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball12"></div>
+                            </div>
+                            <div>
+                                13
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball13"></div>
+                            </div>
+                            <div>
+                                14
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball14"></div>
+                            </div>
+                            <div>
+                                15
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball15"></div>
+                            </div>
+                            <div>
+                                16
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball16"></div>
+                            </div>
+                            <div>
+                                17
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball17"></div>
+                            </div>
+                            <div>
+                                18
+                            </div>
+                            <div class="bar-container-small">
+                                <div class="ball-small" id="ball18"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+	</body>
+    <script src="./js/flight_modes.js"></script>
+</html>

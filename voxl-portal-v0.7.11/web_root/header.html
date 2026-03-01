@@ -1,0 +1,644 @@
+
+
+<link rel="stylesheet" href="./css/w3.css">
+
+<script src="./js/3rd_party/jdataview.js"></script>
+<script src="./js/3rd_party/jparser.js"></script>
+
+<h1>
+    <a id="home" href="/" style="text-decoration: none; font-size: xx-large;" onclick="window.stop()">
+        VOXL Web Portal
+    </a>
+</h1>
+<div style="flex-grow: 1;"></div>
+<div class="w3-container" id="battery">
+    ?%
+    <img src="images/batt-icon.png"/>
+</div>
+<div class="w3-container" id="gps">
+    GPS Sat: N/A
+</div>
+<div class="w3-container" id="flight_mode">
+    Unknown<br>
+</div>
+<div class="w3-container" id="arm_status">
+    Unknown
+</div>
+<div class="w3-dropdown-hover"> <!-- onmouseenter="cameraAccFunc()" onmouseleave="closeCameraAcc()" > -->
+    <button class="w3-button" onclick = "listCamera()">
+        Cameras &#9660;
+    </button>
+    <div id="cameraAcc" class="w3-dropdown-content w3-bar-block" >
+        <button class = "w3-bar-item w3-button w3-green w3-border" pipe="Multi-View" onclick="cameraClick(this)">Multi-View</button>
+        <!-- This list gets populated by updateCameraList() -->
+        <script>
+            fetch('/_cmd/list_cameras').then(response => {
+                return response.text().then(function(text) {
+        
+                //Remove all the children, they should get repopulated to ensure no faulty cameras
+                var eles = document.getElementsByClassName("cam-item");
+                while(eles[0]) {
+                    eles[0].parentNode.removeChild(eles[0]);
+                }
+            
+                var y = document.getElementById("cameraAcc");
+                var cams = text.split(" ");
+            
+                for(var i = 0; i < cams.length; i++){
+                    if(cams[i].length < 1) continue;
+            
+                    var ele = document.createElement("a");
+                    ele.setAttribute("id",       "btn_"+cams[i]);
+                    ele.setAttribute("pipe",     cams[i]);
+                    ele.setAttribute("onclick",  "cameraClick(this)");
+            
+                    ele.classList.add("cam-item");
+                    ele.classList.add("w3-bar-item");
+                    ele.classList.add("w3-button");
+                    ele.classList.add("w3-green");
+                    ele.classList.add("w3-border");
+            
+                    ele.textContent =getNiceName(cams[i]);
+                    y.appendChild(ele);
+                }
+            
+                //y.className += "w3-show";
+                //y.classList.toggle("w3-show")
+                //y.previousElementSibling.className += " w3-pale-green";
+            
+                });
+            });
+        </script>
+    </div>
+</div>
+<div class="w3-dropdown-hover"> <!-- onmouseenter="ptcloudAccFunc()" onmouseleave="closePtcloudAcc()" > -->
+    <button class="w3-button" onclick = "listPtCloud()">
+        Pointclouds &#9660;
+    </button>
+    <div id="ptcloudAcc" class="w3-dropdown-content w3-bar-block" >
+        <!-- This list gets populated by updatePtcloudList() -->
+        <script>
+            fetch('/_cmd/list_ptclouds').then(response => {
+                return response.text().then(function(text) {
+    
+                //Remove all the children, they should get repopulated to ensure no faulty cameras
+                var eles = document.getElementsByClassName("ptc-item");
+                while(eles[0]) {
+                    eles[0].parentNode.removeChild(eles[0]);
+                }
+    
+                var y = document.getElementById("ptcloudAcc");
+                var ptcs = text.split(" ");
+    
+                for(var i = 0; i < ptcs.length; i++){
+                    if(ptcs[i].length < 1) continue;
+    
+                    var ele = document.createElement("a");
+                    ele.setAttribute("id",       "btn_"+ptcs[i]);
+                    ele.setAttribute("pipe",     ptcs[i]);
+                    ele.setAttribute("onclick",  "ptcloudClick(this)");
+                    
+                    ele.classList.add("ptc-item");
+                    ele.classList.add("w3-bar-item");
+                    ele.classList.add("w3-button");
+                    ele.classList.add("w3-green");
+                    ele.classList.add("w3-border");
+
+    
+                    ele.textContent =getNiceName(ptcs[i]);
+                    y.appendChild(ele);
+                }
+                
+                //y.className += " w3-show";
+                //y.classList.toggle("w3-show");
+                //y.previousElementSibling.className += " w3-pale-green";
+    
+                });
+            });
+        </script>
+    </div>
+</div>
+<div class="w3-dropdown-hover">
+    <button class="w3-button"  onclick="listDebug()">
+        Debug &#9660;
+    </button>
+    <div id="debugAcc" class="w3-dropdown-content w3-bar-block w3-border" >
+        <a class="w3-bar-item w3-button w3-green w3-border" onclick ="window.location.href = './sensor-calibration.html'">Sensor Calibration</a>
+        <a class="w3-bar-item w3-button w3-green w3-border" onclick ="window.location.href = './baro-calibration.html'">Barometer Calibration</a>
+        <a class="w3-bar-item w3-button w3-green w3-border" onclick ="window.location.href = './rc-calibration.html'">RC Calibration</a>
+        <a class="w3-bar-item w3-button w3-green w3-border" onclick ="window.location.href = './flight-modes.html'">Flight Modes</a>
+        <a class="w3-bar-item w3-button w3-green w3-border" onclick ="window.location.href = './test-actuators.html'">Actuators</a>
+        <a class="w3-bar-item w3-button w3-green w3-border" onclick ="window.location.href = './health-check.html'">Health Check</a>
+        <a class="w3-bar-item w3-button w3-green w3-border"  onclick="window.location.href = './imu.html'">Imus</a>
+        <a class="w3-bar-item w3-button w3-green w3-border"  onclick="window.location.href = './cpu.html'">Cpu</a>
+        <a class="w3-bar-item w3-button w3-green w3-border" onclick ="window.location.href = './version.html'">Version Info</a>
+        <a class="w3-bar-item w3-button w3-green w3-border" onclick ="window.location.href = './download-logs.html'">Download Logs</a> 
+        <a class="w3-bar-item w3-button w3-green w3-border" onclick ="window.location.href = './gps-graph.html'">GPS</a> 
+    </div>
+</div>
+<button class="w3-button" onclick="window.location.href = './benchmark.html';">
+    Benchmark
+</button>
+<button class="w3-button" onclick="window.location.href = './vio.html';">
+    VIO
+</button>
+<button id = "mapper_btn" class="w3-button" onclick="window.location.href = './mapper.html';">
+    Mapper
+</button>
+<label id="dark_mode" class="switch" align = "center">
+    <input class="w3-button w3-block w3-black" id="mode_btn" type="checkbox">
+    <span id = "button_text" class="text"></span>
+</label>
+
+<!-- <script>
+    if (document.body.style.background = "black") {
+        document.getElementById("button_text").textContent = "Dark";
+    }
+    else {
+        document.getElementById("button_text").textContent = "Light";
+    }
+</script> -->
+
+<div class="w3-show w3-padding-64 w3-display-topright">
+    <span class="closebtn w3-hide" id="mav_warn_close" onclick="this.classList.toggle('w3-hide'); document.getElementById('mav_fail_warning').classList.toggle('w3-hide');">&times;</span>
+    <div class="alert w3-hide" id="mav_fail_warning"></div>
+</div>
+
+<script src="./js/get_url.js"></script>
+<script id = "main header script">
+
+var url_base = get_url_base();
+var url_port = get_url_port();
+
+
+const mode_btn = document.getElementById('mode_btn');
+
+// set our platform, just in case any js side stuff needs to know
+if (localStorage.getItem("platform") == null){
+    fetch("/_cmd/platform").then(function(response) {
+        return response.text().then(function(text) {
+            localStorage.setItem("platform",text);
+        });
+    });
+}
+
+if (localStorage.getItem("platform") == "QRB"){
+    fft_button = document.createElement("a");
+    fft_button.classList.add("w3-bar-item");
+    fft_button.classList.add("w3-button");
+    fft_button.classList.add("w3-green");
+    fft_button.classList.add("w3-border");
+    fft_button.onclick = function(){window.location.href = './fft.html';}
+    fft_button.innerHTML = "FFT";
+    document.getElementById("debugAcc").appendChild(fft_button);
+}
+
+// set our platform, just in case any js side stuff needs to know
+fetch("/_cmd/health_check_enabled").then(function(response) {
+    return response.text().then(function(text) {
+        localStorage.setItem("health-check",text);
+        if(text == "true"){
+            factory_button = document.createElement("a");
+            factory_button.classList.add("w3-bar-item");
+            factory_button.classList.add("w3-button");
+            factory_button.classList.add("w3-green");
+            factory_button.classList.add("w3-border");
+            factory_button.onclick = function(){window.location.href = './voxl-system-check.html';}
+            factory_button.innerHTML = "voxl system check";
+            document.getElementById("debugAcc").appendChild(factory_button);
+        }
+    });
+});
+
+
+
+function closeCameraAcc(){
+
+  //Close and remove the green coloring of the dropdown
+  var x = document.getElementById("cameraAcc");
+  x.classList.remove("w3-show");
+  x.previousElementSibling.classList.remove("w3-pale-green");
+
+  //Remove all the children, they should get repopulated to ensure no faulty cameras
+  var eles = document.getElementsByClassName("cam-item");
+  while(eles[0]) {
+    eles[0].parentNode.removeChild(eles[0]);
+  }
+
+}
+
+function cameraAccFunc() {
+    updateCameraList();
+}
+
+function updateCameraList(){
+  fetch('/_cmd/list_cameras').then(function(response) {
+    return response.text().then(function(text) {
+      //Remove all the children, they should get repopulated to ensure no faulty cameras
+      var eles = document.getElementsByClassName("cam-item");
+      while(eles[0]) {
+        eles[0].parentNode.removeChild(eles[0]);
+      }
+
+      var y = document.getElementById("cameraAcc");
+      var cams = text.split(" ");
+
+      for(var i = 0; i < cams.length; i++){
+        if(cams[i].length < 1) continue;
+
+        var ele = document.createElement("a");
+        ele.setAttribute("id",       "btn_"+cams[i]);
+        ele.setAttribute("pipe",     cams[i]);
+        ele.setAttribute("onclick",  "cameraClick(this)");
+
+        ele.classList.add("cam-item");
+        ele.classList.add("w3-bar-item");
+        ele.classList.add("w3-button");
+        ele.classList.add("w3-green");
+        ele.classList.add("w3-border");
+
+        ele.textContent =getNiceName(cams[i]);
+        y.appendChild(ele);
+      }
+
+      //y.className += "w3-show";
+    // y.classList.toggle("w3-show")
+      //y.previousElementSibling.className += " w3-pale-green";
+
+    });
+  });
+}
+function closePtcloudAcc(){
+    //Close and remove the green coloring of the dropdown
+    var x = document.getElementById("ptcloudAcc");
+    x.classList.remove("w3-show");
+    x.previousElementSibling.classList.remove("w3-pale-green");
+
+    //Remove all the children, they should get repopulated to ensure no faulty cameras
+    var eles = document.getElementsByClassName("ptc-item");
+    while(eles[0]) {
+        eles[0].parentNode.removeChild(eles[0]);
+    }
+}
+
+function ptcloudAccFunc() {
+    updatePtcloudList();
+}
+
+function updatePtcloudList(){
+fetch('/_cmd/list_ptclouds').then(function(response) {
+  return response.text().then(function(text) {
+
+    //Remove all the children, they should get repopulated to ensure no faulty cameras
+    var eles = document.getElementsByClassName("ptc-item");
+    while(eles[0]) {
+        eles[0].parentNode.removeChild(eles[0]);
+    }
+
+    var y = document.getElementById("ptcloudAcc");
+    var ptcs = text.split(" ");
+
+    for(var i = 0; i < ptcs.length; i++){
+      if(ptcs[i].length < 1) continue;
+
+      var ele = document.createElement("a");
+      ele.setAttribute("id",       "btn_"+ptcs[i]);
+      ele.setAttribute("pipe",     ptcs[i]);
+      ele.setAttribute("onclick",  "ptcloudClick(this)");
+
+      ele.classList.add("ptc-item");
+      ele.classList.add("w3-bar-item");
+      ele.classList.add("w3-button");
+      ele.classList.add("w3-green");
+      ele.classList.add("w3-border");
+
+      ele.textContent =getNiceName(ptcs[i]);
+      y.appendChild(ele);
+    }
+
+    //y.className += " w3-show";
+    y.classList.toggle("w3-show");
+    y.previousElementSibling.className += " w3-pale-green";
+
+  });
+});
+
+}
+
+function getNiceName(string) {
+    // var nameList = string.split("_");
+    // for(var j = 0; j < nameList.length; j++){
+    //   if(nameList[j].length < 1) continue;
+    //   nameList[j] = nameList[j][0].toUpperCase() + nameList[j].substring(1);
+    // }
+    // return nameList.join(' ');
+    return string
+}
+
+function cameraClick(ele) {
+    console.log(ele.getAttribute("id"))
+    window.location.href = './video.html?cam=' + ele.getAttribute("pipe");
+}
+
+function ptcloudClick(ele) {
+    window.location.href = './pointcloud.html?ptc=' + ele.getAttribute("pipe");
+}
+
+function listDebug() {
+  var x = document.getElementById("debugAcc");
+  x.classList.toggle("w3-show");
+}
+
+function listCamera() {
+    var x = document.getElementById("cameraAcc");
+    x.classList.toggle("w3-show");
+}
+
+function listPtCloud() {
+    var x = document.getElementById("ptcloudAcc");
+    x.classList.toggle("w3-show");
+}
+
+
+var new_mapper_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/map_new");
+if (new_mapper_ws.readyState == WebSocket.OPEN) {
+    new_mapper_ws.send("HELLO");
+}
+new_mapper_ws.onmessage = function(evt) {
+    var msg = evt.data;
+    if (msg == "FOUND") {
+    }
+    else {
+        //document.getElementById("mapper_btn").style.display = "none"
+    }
+}
+/*
+if (!window.location.href.includes("video") && last_single_cam != null) {
+    console.log(last_single_cam);
+    var close = new WebSocket("ws://" + url_partial[2] + ":80/close_last_single/" + last_single_cam)
+}
+*/
+
+
+var header_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/header");
+header_ws.binaryType = "arraybuffer";
+
+let got_fm_params = false;
+
+let FLIGHT_INFO_INDEX = 0;
+let STATUS_TEXT_INDEX  = 1;
+let RC_CHANNELS_INDEX = 2;
+let PARAM_MSG_INDEX = 5;
+let CALIBRATION_PREFIX = "[cal] "
+
+let batt_ele = document.getElementById("battery");
+let gps_ele = document.getElementById("gps");
+let arm_status = document.getElementById("arm_status");
+let fm_status = document.getElementById("flight_mode");
+let warn = document.getElementById("mav_fail_warning");
+let mav_close = document.getElementById("mav_warn_close");
+
+
+
+
+header_ws.onmessage = function (evt) {
+    if (batt_ele.classList.contains("w3-hide")) return;
+    var msg = evt.data;
+    var parser = new jParser(msg, {
+        msg_type: {
+            index: 'uint8',
+        },
+        status_text_msg: {
+            status_text: ['array', 'char', 127],
+        },
+        rc_channels_msg: {
+            chancount: 'uint8',
+            chan1_raw: 'uint16',
+            chan2_raw: 'uint16',
+            chan3_raw: 'uint16',
+            chan4_raw: 'uint16',
+            chan5_raw: 'uint16',
+            chan6_raw: 'uint16',
+            chan7_raw: 'uint16',
+            chan8_raw: 'uint16',
+            chan9_raw: 'uint16',
+            chan10_raw: 'uint16',
+            chan11_raw: 'uint16',
+            chan12_raw: 'uint16',
+            chan13_raw: 'uint16',
+            chan14_raw: 'uint16',
+            chan15_raw: 'uint16',
+            chan16_raw: 'uint16',
+            chan17_raw: 'uint16',
+            chan18_raw: 'uint16',
+            rssi: 'uint8'
+        },
+        fm_msg: {
+                armed: 'uint8',
+                num_sats: 'uint8',
+                base_mode: 'uint8',
+                custom_mode: 'uint32',
+                batt_remaining: 'uint8',
+        },
+        param_msg: {
+            buffer: ['array', 'char', 16],
+            param_val: 'int32'
+        }
+    });
+
+    var msg_type = parser.parse('msg_type');
+    switch(msg_type.index){
+
+    	case(STATUS_TEXT_INDEX):
+    		var modes = parser.parse('status_text_msg');
+    		var i;
+    		var error_msg = "";
+            for (i = 0; i < 127; i++){
+                if (modes.status_text[i] == '\x00') break;
+                else error_msg = error_msg.concat(modes.status_text[i]);
+            }
+            
+            if(error_msg.includes(CALIBRATION_PREFIX)){
+                error_msg = error_msg.slice(CALIBRATION_PREFIX.length);
+                onCalibrationMessage(error_msg);
+                return;
+            }
+
+            
+            if(error_msg.includes(CALIBRATION_PREFIX)){
+                error_msg = error_msg.slice(CALIBRATION_PREFIX.length);
+                onCalibrationMessage(error_msg);
+                return;
+            }
+
+            warn.innerHTML = error_msg;
+
+            if (i > 1){
+                if (warn.classList.contains("w3-hide")) warn.classList.toggle("w3-hide");
+                if(mav_close.classList.contains("w3-hide")) mav_close.classList.toggle("w3-hide");
+            }
+            break;
+
+        case(FLIGHT_INFO_INDEX):
+            if (!got_fm_params) {
+                // send a request to get the parameters once we know there's a mavlink connection
+                try {
+                    get_initial_fm_settings() 
+                } catch {}
+                try {
+                    get_initial_actuator_settings() 
+                } catch {}
+                try {
+                    get_initial_rc_settings()
+                }  catch {}
+                try {
+                    get_initial_gps_settings()
+                } catch {}
+
+                got_fm_params = true
+            }
+
+            var modes = parser.parse('fm_msg');
+
+
+            if(modes.batt_remaining > 100) batt_ele.innerHTML = "N/A% <img src='images/batt-icon.png'/>";
+            else batt_ele.innerHTML = modes.batt_remaining + "% <img src='images/batt-icon.png'/>";
+
+
+            gps_ele.innerHTML = "GPS Sat: " + modes.num_sats;
+
+            if (modes.armed) arm_status.innerHTML = "Armed";
+            else arm_status.innerHTML = "Disarmed";
+
+            switch(modes.base_mode){
+                case 0:
+                    fm_status.innerHTML = "Unknown<br>";
+                    return;
+                case 1:
+                    fm_status.innerHTML = "Manual<br>";
+                    return;
+                case 2:
+                    fm_status.innerHTML = "Altitude Hold<br>";
+                    return;
+                case 3:
+                    fm_status.innerHTML = "Position Hold<br>";
+                    return;
+                case 4:
+                    fm_status.innerHTML = "Auto<br>";
+                    break;
+                case 5:
+                    fm_status.innerHTML = "Acro<br>";
+                    return;
+                case 6:
+                    fm_status.innerHTML = "Offboard<br>";
+                    return;
+                case 7:
+                    fm_status.innerHTML = "Stabilized<br>";
+                    return;
+                case 8:
+                    fm_status.innerHTML = "Rattitude<br>";
+                    return;
+            }
+
+            switch (modes.custom_mode){
+                case 1:
+                    fm_status.innerHTML += "Ready";
+                    break;
+                case 2:
+                    fm_status.innerHTML += "Takeoff";
+                    break;
+                case 3:
+                    fm_status.innerHTML += "Loiter";
+                    break;
+                case 4:
+                    fm_status.innerHTML += "Mission";
+                    break;
+                case 5:
+                    fm_status.innerHTML += "RTL";
+                    break;
+                case 6:
+                    fm_status.innerHTML += "Land";
+                    break;
+                case 7:
+                    fm_status.innerHTML += "RTGS";
+                    break;
+                case 8:
+                    fm_status.innerHTML += "Follow Target";
+                    break;
+                case 9:
+                    fm_status.innerHTML += "Precision Land";
+                    break;
+            }
+            break;
+        case (RC_CHANNELS_INDEX): 
+            var rc_channel_info = parser.parse('rc_channels_msg');
+            onRCChannelsMsg(rc_channel_info);
+            break;
+        case (PARAM_MSG_INDEX):
+            var param_msg = parser.parse('param_msg')
+            onParamMsg(param_msg)
+            break;
+
+    }
+}
+
+function close_last_single_cam() {
+    var last_single_cam = localStorage.getItem("single_cam");
+    if (last_single_cam != null) {
+        if (!window.location.href.includes("video")) {
+            var close = new WebSocket("ws://" + url_base + ":" + url_port + "/close_last_single/" + last_single_cam)
+        }
+    }
+}
+
+setTimeout(close_last_single_cam, 2000);
+
+</script>
+
+<script id = "display version number">
+    var vs_version_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/suite_info");
+    vs_version_ws.binaryType = "arraybuffer";
+
+    vs_version_ws.onopen = function() {
+        console.log("[INFO] version websocket open for displaying voxl-suite number");
+    };
+    vs_version_ws.onmessage = function(evt) {
+        var msg = evt.data
+        console.log(msg);
+        
+        var title_elem = document.getElementById("home");
+        title_elem.innerHTML = title_elem.innerText + " " + String.fromCharCode(10140) + " " + msg;
+    }
+
+
+</script>
+
+<script id = "Close H264">
+    if (!window.location.href.includes("h264")) {
+        var close_h264 = new WebSocket("ws://" + url_base + ":" + url_port + "/close_h264/");
+        close_h264.onopen = function() {
+            console.log("WILL NOW ATTEMPT TO CLOSE H264 STREAM IF OPEN...");
+        }
+    }
+</script>
+<script id = "Close Snapshot">
+    if (!window.location.href.includes("snapshot")) {
+        var close_snapshot_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/close_snapshot/")
+        close_snapshot_ws.onopen = function() {
+            console.log("WILL NOW ATTEMPT TO CLOSE SNAPSHOT STREAM IF OPEN...");
+        }
+    }
+</script>
+
+
+<script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+        // this script refreshes the camera list every second
+    $(function(){
+        
+        
+        setInterval(updateCameraList,1000);
+    });
+    
+</script>
+

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<title>ModalAI VOXL Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/w3.css">
+<link rel="icon" href="./images/portal.png">
+
+<header>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+    $(function(){
+      $("#header").load("header.html", function(){
+        mode_btn.addEventListener("click", () => {
+            if (mode_btn.classList.contains("w3-black")) {
+                var x = document.getElementById("button_text");
+                x.textContent = "Dark";
+            }
+            else {
+                var x = document.getElementById("button_text");
+                x.textContent = "Light";
+            }
+        })
+      });
+    });
+    </script>
+    <div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+        <h1>VOXL Web Portal</h1>
+    </div>
+</header>
+<body>
+    <div id="options_div" class="w3-display-right"></div>
+
+    <div class="w3-display-bottommiddle">
+        <button class="w3-button w3-block w3-green w3-show" id="load_action">Start Log</button>
+        <form id="load_form" style="display: none;">
+            <span class="w3-tag w3-blue">Full Log Path:</span>
+            <input type="text" id="load_file_name" name="load_file_name"><br>
+            <button class="w3-button w3-block w3-blue" type='button' id="load_sub_action">Start Log</button>
+            <button class="w3-button w3-block w3-red" type='button' id="load_back">Back</button>
+        </form>
+    </div>
+
+    <div id="stream_div" class="w3-display-left" style="margin-top: 50px; background: rgb(204, 204, 204); width: 45%;" ></div>
+    <div class="w3-display-middle" style = "top: 100px;">
+        <div id="streamAcc" class="w3-hide w3-white w3-card" style = "position: relative;">
+            <div id = "dropdown_vertical_streamAcc" class = "w3-bar" style = "margin: 0; position: absolute; top: 50px; left: 50%; width: max-content; transform: translate(-50%, 0%); flex-wrap: wrap; flex-direction: row;">
+
+            </div>
+        </div>
+        <button class="w3-button w3-dark-grey" id="stream_add">
+            <img src="images/tv-icon.png"/>
+        </button>
+    </div>
+    <div id="inset">
+        <button id="clear_traj" class="w3-block w3-button w3-dark-grey" style = "font-size: x-large;">Clear Trajectories</button>
+        <center>
+            <span style="color:red; font-size: xx-large;">X, </span><span style="color:green; font-size: xx-large;">Y, </span><span style="color:blue; font-size: xx-large">Z</span>
+        </center>
+    </div>
+
+    <div class = "w3-display-left">
+        <button class="w3-padding-large w3-button w3-block w3-blue" id="reset_qvio">Reset QVIO</button>
+        <button class="w3-padding-large w3-button w3-block w3-blue" id="reset_ov">Reset OV</button>
+    </div>
+
+    <script src="./js/3rd_party/jdataview.js"></script>
+    <script src="./js/3rd_party/jparser.js"></script>
+    <script src="./js/3rd_party/math.min.js"></script>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script src="./js/get_url.js"></script>
+
+    <script>
+        var script = document.createElement("script");
+        script.type = "module";
+        script.src = "./js/vio.js";
+        document.getElementsByTagName("body")[0].appendChild(script);
+    </script>
+
+</body>
+
+
+<!-- 
+    //Fix the way cameras are displayed with the dropdown menu button
+    //Close camera upon exiting a specific camera
+    //Fix buttons in ideal locations to make them easily accesible
+    //Make image interactive so you can drag them around the screen 
+    //Attach the camera name to each camera so that it is identifiable 
+
+-->
+
+</html>

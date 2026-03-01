@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+	<title>ModalAI VOXL Portal</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="./css/w3.css">
+	<link rel="stylesheet" href="./css/xterm.min.css">
+	<link rel="icon" href="./images/portal.png">
+    
+    <style> 
+        body {
+            margin: 0;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .main-body {
+            padding-top: 20px;
+            padding-bottom: 10px;
+        }
+   
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #3498db;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+
+        .slidecontainer {
+            width: 400px; /* Adjust as needed */
+            height: 100px; /* Adjust as needed */
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slider {
+            width: 100%; /* 3 times the container width for 3 images */
+            height: 100%;
+            display: flex;
+            transition: transform 0.5s ease-in-out; /* Smooth transition */
+        }
+
+        .slider-title {
+            padding-top: 37px; 
+            margin-right: 25px;
+            width: 100px;
+        }
+
+
+    </style>
+	<header>
+		<script src="./js/3rd_party/jquery-3.6.0.js"></script>
+		<script src="./js/3rd_party/xterm.min.js"></script>
+		<script>
+		$(function(){
+			$("#header").load("header.html");
+		});
+		</script>
+		<div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+			<h1>VOXL Web Portal</h1>
+		</div>
+	</header>
+
+	<body>
+        <div style="display: flex;">
+            <div style="margin-left: 20px; flex: 30%;"> 
+                <div style="display: flex; margin-top: 20px;">
+                    <div style="color: red; margin-right: 20px;">
+                        Propellers are removed - enable sliders
+                    </div>
+                    <input id="enableSlidersCheckbox" type="checkbox"></input>
+                </div>
+                <div style="display: flex">
+                    <div class="slider-title">
+                        All Motors
+                    </div>
+                    <div class="slidecontainer">
+                        <input type="range" min="1" max="100" value="0" class="slider" id="motorRangeAll">
+                    </div>
+                </div>
+                <div style="display: flex">
+                    <div class="slider-title">
+                        Motor 1
+                    </div>
+                    <div class="slidecontainer">
+                        <input type="range" min="1" max="100" value="0" class="slider" id="motorRange1">
+                    </div>
+                </div>
+    
+                
+                <div style="display: flex">
+                    <div class="slider-title">
+                        Motor 2
+                    </div>
+                    <div class="slidecontainer">
+                        <input type="range" min="1" max="100" value="0" class="slider" id="motorRange2">
+                    </div>
+                </div>
+    
+                <div style="display: flex">
+                    <div class="slider-title">
+                        Motor 3
+                    </div>
+                    <div class="slidecontainer">
+                        <input type="range" min="1" max="100" value="0" class="slider" id="motorRange3">
+                    </div>
+                </div>
+    
+                <div style="display: flex">
+                    <div class="slider-title">
+                        Motor 4
+                    </div>
+                    <div class="slidecontainer">
+                        <input type="range" min="1" max="100" value="0" class="slider" id="motorRange4">
+                    </div>
+                </div>
+            </div>
+            <div style="flex: 30%; display: flex;">
+                <div>
+                    <div style="padding-bottom: 10px;">
+                        VOXL ESC
+                    </div>
+                    <div style="display: flex; margin-bottom: 10px;">
+                        <div style="margin-right: 20px;">
+                            ESC 1
+                        </div>
+                        <div style="display: flex">
+                            <select id='esc1'>
+                                <option value="101">Motor 1</option>
+                                <option value="102">Motor 2</option>
+                                <option value="103">Motor 3</option>
+                                <option value="104">Motor 4</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; margin-bottom: 10px;">
+                        <div style="margin-right: 20px;">
+                            ESC 2
+                        </div>
+                        <div style="display: flex">
+                            <select id='esc2'>
+                                <option value="101">Motor 1</option>
+                                <option value="102">Motor 2</option>
+                                <option value="103">Motor 3</option>
+                                <option value="104">Motor 4</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; margin-bottom: 10px;">
+                        <div style="margin-right: 20px;">
+                            ESC 3
+                        </div>
+                        <div style="display: flex">
+                            <select id='esc3'>
+                                <option value="101">Motor 1</option>
+                                <option value="102">Motor 2</option>
+                                <option value="103">Motor 3</option>
+                                <option value="104">Motor 4</option>
+                            </select>
+    
+                        </div>
+                    </div>
+                    <div style="display: flex; margin-bottom: 10px;">
+                        <div style="margin-right: 20px;">
+                            ESC 4
+                        </div>
+                        <div style="display: flex">
+                            <select id='esc4'>
+                                <option value="101">Motor 1</option>
+                                <option value="102">Motor 2</option>
+                                <option value="103">Motor 3</option>
+                                <option value="104">Motor 4</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-left: 30px;">
+                    <div style="margin-bottom: 10px;">
+                        ESC Spin Direction
+                    </div>
+                    <div style="display: flex; margin-bottom: 10px;">
+                        <div style="display: flex;">
+                            <div style='padding-right: 10px;'>
+                                Reversed
+                            </div>
+                            <input type="checkbox" id="esc1_rev">
+                        </div>
+                    </div>
+                    <div style="display: flex; margin-bottom: 10px;">
+    
+                        <div style="display: flex;">
+                            <div style='padding-right: 10px;'>
+                                Reversed
+                            </div>
+                            <input type="checkbox" id="esc2_rev">
+                        </div>
+                    </div>
+                    <div style="display: flex; margin-bottom: 10px;">
+    
+                        <div style="display: flex;">
+                            <div style='padding-right: 10px;'>
+                                Reversed
+                            </div>
+                            <input type="checkbox" id="esc3_rev">
+                        </div>
+                    </div>
+                    <div style="display: flex; margin-bottom: 10px;">
+    
+                        <div style="display: flex;">
+                            <div style='padding-right: 10px;'>
+                                Reversed
+                            </div>
+                            <input type="checkbox" id="esc4_rev">
+                        </div>
+                    </div>    
+                </div>
+            </div>
+            <div style="margin-top: 40px; flex: 30%;">
+                <div style="display: flex; padding-bottom: 10px;">
+                    <button id="identifyMotorsButton" onClick="identifyMotorsButtonClicked()">
+                        Identify and Assign Motors
+                    </button>
+                    <button style="display: none;" id="spinAgainButton" onClick="spinAgainButtonClicked()">
+                        Spin again
+                    </button>
+                </div>
+                <div id="identifyMotorText"></div>
+                <div style="width: 300px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 291.424 291.77">
+                        <path fill="#FFF" stroke="#000" stroke-miterlimit="10" stroke-width=".99999" d="M48.798 238.263 237.695 49.366l4.792 4.792L53.59 243.055z"/>
+                        <path fill="#FFF" stroke="#000" stroke-miterlimit="10" stroke-width=".99999" d="m48.793 54.153 4.792-4.792 188.91 188.91-4.793 4.791z"/>
+                        <path fill="#FFF" stroke="#000" stroke-miterlimit="10" d="M188.845 153.215 152.65 189.41c-3.869 3.869-10.141 3.869-14.009 0l-36.195-36.195c-3.869-3.869-3.869-10.141 0-14.009l36.195-36.195c3.869-3.869 10.141-3.869 14.009 0l36.195 36.195c3.869 3.869 3.869 10.141 0 14.009z"/>
+                        <path fill="#FF442B" stroke="#000" stroke-miterlimit="10" d="m127.468 168.211 18.177-51 18.178 51z"/>
+                        <a id="motor_graphic_1" disabled='true' style="cursor: Default; opacity: 1; position: relative;" onClick="motorButton(1)">
+                            <ellipse cx="240.427" cy="51.629" fill="#4EC3E8" opacity=".8" rx="50.993" ry="51.004" transform="rotate(-44.838 240.445 51.627)"/>
+                            <path fill="#FFF" stroke="#000" stroke-miterlimit="10" d="M248.364 43.704c-4.374-4.384-11.473-4.393-15.858-.019s-4.393 11.473-.019 15.858c4.365 4.375 11.447 4.394 15.835.042 4.397-4.335 4.446-11.414.111-15.811z"/>
+                            <text x="240.427" y="51.629" text-anchor="middle" dominant-baseline="middle" font-size="15" fill="red">1</text>
+                        </a>
+                        <a id="motor_graphic_2" style="cursor: Default; opacity: 1; position: relative;" onClick="motorButton(2)">
+                            <ellipse cx="51.554" cy="240.78" fill="#4EC3E8" opacity=".8" rx="50.993" ry="51.004" transform="rotate(-44.838 51.563 240.796)"/>
+                            <path fill="#FFF" stroke="#000" stroke-miterlimit="10" d="M43.612 248.69c4.374 4.384 11.473 4.393 15.858.019s4.393-11.473.019-15.858c-4.365-4.375-11.447-4.394-15.835-.042-4.397 4.335-4.446 11.414-.111 15.811z"/>
+                            <text x="51.554" y="240.78" text-anchor="middle" dominant-baseline="middle" font-size="15" fill="red">2</text>
+                        </a>
+                        <a id="motor_graphic_3" style="cursor: Default; opacity: 1; position: relative;" onClick="motorButton(3)">
+                            <ellipse cx="50.994" cy="50.994" fill="#159E1F" opacity=".8" rx="50.993" ry="51.004" transform="rotate(-45.162 50.989 50.993)"/>
+                            <path fill="#FFF" stroke="#000" stroke-miterlimit="10" d="M58.914 43.059c4.384 4.374 4.393 11.473.019 15.858s-11.473 4.393-15.858.019c-4.375-4.365-4.394-11.447-.042-15.835 4.335-4.397 11.414-4.446 15.811-.111z"/>
+                            <text x="50.994" y="50.994" text-anchor="middle" dominant-baseline="middle" font-size="15" fill="red">3</text>
+                        </a>
+                        <a id="motor_graphic_4" style="cursor: Default; opacity: 1; position: relative;" onClick="motorButton(4)">
+                            <ellipse cx="240.373" cy="240.62" fill="#159E1F" opacity=".8" rx="50.993" ry="51.004" transform="rotate(-45.162 240.35 240.613)"/>
+                            <path fill="#FFF" stroke="#000" stroke-miterlimit="10" d="M232.459 248.567c-4.384-4.374-4.393-11.473-.019-15.858s11.473-4.393 15.858-.019c4.375 4.365 4.394 11.447.042 15.835-4.335 4.397-11.414 4.446-15.811.111z"/>
+                            <text x="240.373" y="240.62" text-anchor="middle" dominant-baseline="middle" font-size="15" fill="red">4</text>
+                        </a>
+                    </svg>
+                </div>
+            </div>
+        </div>
+	</body>
+
+	<script src="./js/get_url.js"></script>
+    <script src="./js/test_actuators.js"></script>
+</html>
