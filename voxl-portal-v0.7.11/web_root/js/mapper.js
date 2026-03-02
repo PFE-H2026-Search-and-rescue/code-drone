@@ -21,6 +21,46 @@ const ControlsType = Object.freeze({
     Fly: 1
 })
 
+//---------PFE--------
+let width = 0
+let height = 0
+let intersects = []
+let hovered = {}
+class Cube extends THREE.Mesh {
+  constructor() {
+    super()
+    this.geometry = new THREE.BoxGeometry()
+    this.material = new THREE.MeshStandardMaterial({ color: new THREE.Color('orange').convertSRGBToLinear() })
+    this.cubeSize = 0
+    this.cubeActive = false
+  }
+
+  render() {
+    this.rotation.x = this.rotation.y += 0.01
+  }
+
+  onResize(width, height, aspect) {
+    this.cubeSize = width / 5 // 1/5 of the full width
+    this.scale.setScalar(this.cubeSize * (this.cubeActive ? 1.5 : 1))
+  }
+
+  onPointerOver(e) {
+    this.material.color.set('hotpink')
+    this.material.color.convertSRGBToLinear()
+  }
+
+  onPointerOut(e) {
+    this.material.color.set('orange')
+    this.material.color.convertSRGBToLinear()
+  }
+
+  onClick(e) {
+    this.cubeActive = !this.cubeActive
+    this.scale.setScalar(this.cubeSize * (this.cubeActive ? 1.5 : 1))
+  }
+}
+//--------------------
+
 //////////////////////////////////////////////////////////
 // Scene Setup
 //////////////////////////////////////////////////////////
@@ -46,7 +86,7 @@ scene.background = new THREE.Color(0xcccccc);
 var grid = new THREE.GridHelper(25, 50);
 grid.geometry.rotateX(Math.PI / 2);
 
-scene.add(grid);
+// scene.add(grid);
 
 const tick_markers = [];
 
@@ -102,6 +142,7 @@ document.body.appendChild(renderer.domElement);
 
 window.addEventListener('resize', onWindowResize);
 
+
 // camera setup
 const fov = 50;
 const aspect = window.innerWidth / window.innerHeight;
@@ -130,6 +171,75 @@ container2.height = insetHeight;
 const controlsGizmo = new OrbitControlsGizmo(controls, { size:  300, padding: 8});
 controlsGizmo.domElement.style.marginTop = 0 + "px";
 container2.appendChild(controlsGizmo.domElement);
+
+
+//------PFE------
+const cube1 = new Cube()
+cube1.position.set(-1.5, 0, 0)
+const cube2 = new Cube()
+cube2.position.set(1.5, 0, 0)
+scene.add(cube1)
+scene.add(cube2)
+width = window.innerWidth
+height = window.innerHeight - height_offset
+const raycaster = new THREE.Raycaster()
+const mouse = new THREE.Vector2()
+
+window.addEventListener('pointermove', (e) => {
+  mouse.set((e.clientX / width) * 2 - 1, -((e.clientY - height_offset) / height) * 2 + 1)
+  raycaster.setFromCamera(mouse, perspectiveCamera)
+  intersects = raycaster.intersectObjects(scene.children, true)
+
+  // If a previously hovered item is not among the hits we must call onPointerOut
+  Object.keys(hovered).forEach((key) => {
+    const hit = intersects.find((hit) => hit.object.uuid === key)
+    if (hit === undefined) {
+      const hoveredItem = hovered[key]
+      if (hoveredItem.object.onPointerOver) hoveredItem.object.onPointerOut(hoveredItem)
+      delete hovered[key]
+    }
+  })
+
+  intersects.forEach((hit) => {
+    // If a hit has not been flagged as hovered we must call onPointerOver
+    if (!hovered[hit.object.uuid]) {
+      hovered[hit.object.uuid] = hit
+      if (hit.object.onPointerOver) hit.object.onPointerOver(hit)
+    }
+    // Call onPointerMove
+    if (hit.object.onPointerMove) hit.object.onPointerMove(hit)
+  })
+})
+
+console.log("Hello")
+window.addEventListener('click', (e) => {
+    console.log("Clicked")
+    intersects.forEach((hit) => {
+        console.log("hit something : ")
+        console.log(hit.point.x.toString() + ", " + hit.point.y.toString() + ", "+ hit.point.z.toString())
+
+        const plan_geom = new THREE.BufferGeometry();
+        const col = [0, 0, 0];
+        plan_geom.setAttribute('position', new THREE.Float32BufferAttribute(hit.point, 3));
+        plan_geom.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+
+        // plan_geom.computeBoundingSphere();
+
+        const material = new THREE.PointsMaterial({ size: 0.2, vertexColors: true });
+
+        plan_pt = new THREE.Points(plan_geom, material);
+        scene.add(plan_pt);
+
+        // transform_helper.position.copy(plan_pt.position);
+        // transform_helper.attach(plan_pt);
+        // scene.add(transform_helper);
+        // transform_helper.getObjectByName("gizmo").position.copy(pos);
+
+    // Call onClick
+    if (hit.object.onClick) hit.object.onClick(hit)
+  })
+})
+//--------------
 
 animate();
 
@@ -288,7 +398,7 @@ function connect_cmap() {
             scene_costmap.geometry.attributes.position.needsUpdate = true;
             scene_costmap.geometry.attributes.color.needsUpdate = true;
 
-            scene.add(scene_costmap);
+            // scene.add(scene_costmap);
         }
         else {
             scene.remove(scene_costmap);
@@ -680,7 +790,7 @@ function connect_ptc() {
             aligned_pointclouds[aligned_index].geometry.buffersNeedUpdate = true;
             aligned_pointclouds[aligned_index].geometry.attributes.position.needsUpdate = true;
 
-            scene.add(aligned_pointclouds[aligned_index]);
+            // scene.add(aligned_pointclouds[aligned_index]);
         }
         else {
             for (var i = 0; i < aligned_pointclouds.length; i++){
@@ -1368,6 +1478,8 @@ function resetCamera()
 
 function onWindowResize() {
 
+    width = window.innerWidth
+    height = window.innerHeight - height_offset
     const aspect = window.innerWidth / window.innerHeight;
 
     perspectiveCamera.aspect = aspect;
