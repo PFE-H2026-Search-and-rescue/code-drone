@@ -1,18 +1,31 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+// import * as THREE from 'three';
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+// import { FlyControls } from './3rd_party/FlyControls.js';
+// import { FontLoader} from './3rd_party/FontLoader.js';
+// import { TextGeometry} from './3rd_party/TextGeometry.js';
+// import { TransformControls } from './3rd_party/TransformControls.js';
+// import {
+//     init as initRecastNavigation,
+//     NavMeshQuery,
+// } from '@recast-navigation/core';
+// import { generateSoloNavMesh } from '@recast-navigation/generators';
+// import {
+//     DebugDrawer,
+//     getPositionsAndIndices,
+// } from '@recast-navigation/three';
+
+import * as THREE from './3rd_party/pfe_mapper/three.module.js';
+import { OrbitControls } from './3rd_party/pfe_mapper/OrbitControls.js';
 import { FlyControls } from './3rd_party/FlyControls.js';
 import { FontLoader} from './3rd_party/FontLoader.js';
 import { TextGeometry} from './3rd_party/TextGeometry.js';
 import { TransformControls } from './3rd_party/TransformControls.js';
 import {
     init as initRecastNavigation,
-    NavMeshQuery,
-} from '@recast-navigation/core';
-import { generateSoloNavMesh } from '@recast-navigation/generators';
-import {
-    DebugDrawer,
-    getPositionsAndIndices,
-} from '@recast-navigation/three';
+} from './3rd_party/pfe_mapper/recast-navigation-core.js';
+import { PFE_Pathfinder } from './pfe_mapper.js';
+
+
 
 const pointcloud_format = {
     FLOAT_XYZ: 0,
@@ -31,43 +44,6 @@ const ControlsType = Object.freeze({
 
 //---------PFE--------
 await initRecastNavigation();
-let width = 0
-let height = 0
-let intersects = []
-let hovered = {}
-class Cube extends THREE.Mesh {
-  constructor() {
-    super()
-    this.geometry = new THREE.BoxGeometry()
-    this.material = new THREE.MeshStandardMaterial({ color: new THREE.Color('orange').convertSRGBToLinear() })
-    this.cubeSize = 0
-    this.cubeActive = false
-  }
-
-  render() {
-    this.rotation.x = this.rotation.y += 0.01
-  }
-
-  onResize(width, height, aspect) {
-    this.cubeSize = width / 5 // 1/5 of the full width
-    this.scale.setScalar(this.cubeSize * (this.cubeActive ? 1.5 : 1))
-  }
-
-  onPointerOver(e) {
-    this.material.color.set('hotpink')
-    this.material.color.convertSRGBToLinear()
-  }
-
-  onPointerOut(e) {
-    this.material.color.set('orange')
-    this.material.color.convertSRGBToLinear()
-  }
-
-  onClick(e) {
-    this.cubeActive = !this.cubeActive
-    this.scale.setScalar(this.cubeSize * (this.cubeActive ? 1.5 : 1))
-  }
-}
 //--------------------
 
 //////////////////////////////////////////////////////////
@@ -177,167 +153,17 @@ let container2 = document.getElementById('inset');
 container2.width = insetWidth;
 container2.height = insetHeight;
 
-
-
-//------PFE------
-const cube1 = new Cube()
-cube1.position.set(-1.5, 0, 0)
-const cube2 = new Cube()
-cube2.position.set(1.5, 0, 0)
-scene.add(cube1)
-scene.add(cube2)
-width = window.innerWidth
-height = window.innerHeight - height_offset
-const raycaster = new THREE.Raycaster()
-const mouse = new THREE.Vector2()
-
-window.addEventListener('pointermove', (e) => {
-  mouse.set((e.clientX / width) * 2 - 1, -((e.clientY - height_offset) / height) * 2 + 1)
-  raycaster.setFromCamera(mouse, perspectiveCamera)
-  intersects = raycaster.intersectObjects(scene.children, true)
-
-  // If a previously hovered item is not among the hits we must call onPointerOut
-  Object.keys(hovered).forEach((key) => {
-    const hit = intersects.find((hit) => hit.object.uuid === key)
-    if (hit === undefined) {
-      const hoveredItem = hovered[key]
-      if (hoveredItem.object.onPointerOver) hoveredItem.object.onPointerOut(hoveredItem)
-      delete hovered[key]
-    }
-  })
-
-  intersects.forEach((hit) => {
-    // If a hit has not been flagged as hovered we must call onPointerOver
-    if (!hovered[hit.object.uuid]) {
-      hovered[hit.object.uuid] = hit
-      if (hit.object.onPointerOver) hit.object.onPointerOver(hit)
-    }
-    // Call onPointerMove
-    if (hit.object.onPointerMove) hit.object.onPointerMove(hit)
-  })
-})
+//-------PFE-----------
+const pfe_pathfinder = new PFE_Pathfinder(window.innerHeight - height_offset, window.innerWidth, height_offset, scene, perspectiveCamera);
 
 window.addEventListener('click', (e) => {
-    console.log("Clicked")
-    if (intersects.length > 0){
-        const [positions, indices] = getPositionsAndIndices([
-            scene_mesh.getObjectByName("front_mesh")
-        ]);
-
-        // generate a solo navmesh
-        const cs = 0.05;
-        const ch = 0.05;
-        const walkableRadius = 0.2;
-        const { success, navMesh } = generateSoloNavMesh(positions, indices, {
-            cs,
-            ch,
-            walkableRadius: Math.round(walkableRadius / ch),
-        });
-
-        // debug draw the navmesh
-        const debugDrawer = new DebugDrawer();
-        debugDrawer.drawNavMesh(navMesh);
-        scene.add(debugDrawer);
-
-        // compute a path, ,  , , ,  mapper.js line 10109 > srcScript:279:17
-
-        const start = { x: -4.366065648965934, y: -0.5731215641615135, z: 0.10939914453444466 };
-        const end = { x: 1.5388214195262044, y: -0.688995680447261, z: -1.99214160183517 };
-
-        const navMeshQuery = new NavMeshQuery(navMesh);
-        const { path } = navMeshQuery.computePath(start, end);
-        console.log(path.toString())
-        // draw the path start
-        const startMarker = new THREE.Mesh(
-            new THREE.BoxGeometry(0.1, 0.1, 0.1),
-            new THREE.MeshBasicMaterial({ color: 'blue' })
-        );
-        startMarker.position.set(start.x, start.y + 0.1, start.z);
-        scene.add(startMarker);
-
-        // draw the path end
-        const endMarker = new THREE.Mesh(
-            new THREE.BoxGeometry(0.1, 0.1, 0.1),
-            new THREE.MeshBasicMaterial({ color: 'green' })
-        );
-        endMarker.position.set(end.x, end.y + 0.1, end.z);
-        scene.add(endMarker);
-
-        // draw the path line
-        const line = new THREE.Line(
-            new THREE.BufferGeometry().setFromPoints(
-            path.map(({ x, y, z }) => new THREE.Vector3(x, y, z))
-            ),
-            new THREE.LineBasicMaterial({ color: 'blue' })
-        );
-        line.position.y += 0.1;
-        scene.add(line);
-    }
-    intersects.forEach((hit) => {
-        console.log("hit something : ")
-        console.log(hit.point.x.toString() + ", " + hit.point.y.toString() + ", "+ hit.point.z.toString())
-
-        
-        // const pathfinder = new MeshPathfinder();
-        
-        // const start = new THREE.Vector3(0, 0, 0);
-        // const goal  = hit.point;
-
-        // pathfinder.init_ground(scene_mesh.getObjectByName("front_mesh"))
-
-
-        // let start_index = pathfinder._findClosestVertex(start);
-        // console.log("start : " + start_index.toString())
-
-        // if(start_index != -1){
-        //     let new_point = pathfinder.vertices[start_index];
-        //     const plan_geom = new THREE.BufferGeometry();
-        //     const col = [0, 0, 0];
-        //     plan_geom.setAttribute('position', new THREE.Float32BufferAttribute(new_point, 3));
-        //     plan_geom.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-        //     const material = new THREE.PointsMaterial({ size: 0.2, vertexColors: true });
-        //     plan_pt = new THREE.Points(plan_geom, material);
-        //     scene.add(plan_pt);
-        // }
-
-        // let end_index = pathfinder._findClosestVertex(goal);
-        // console.log("end : " + end_index.toString())
-
-        // if(end_index != -1){
-        //     let new_point = pathfinder.vertices[end_index];
-        //     const plan_geom = new THREE.BufferGeometry();
-        //     const col = [1, 0, 0];
-        //     plan_geom.setAttribute('position', new THREE.Float32BufferAttribute(new_point, 3));
-        //     plan_geom.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-        //     const material = new THREE.PointsMaterial({ size: 0.2, vertexColors: true });
-        //     plan_pt = new THREE.Points(plan_geom, material);
-        //     scene.add(plan_pt);
-        // }
-        
-        // const path = pathfinder.findPath(start, goal);
-        // console.log(path);
-        // if (path) {
-
-        //     const curve = new THREE.CatmullRomCurve3(path);
-        //     const smoothPoints = curve.getPoints(100);
-
-        //     const lineGeom = new THREE.BufferGeometry().setFromPoints(smoothPoints);
-        //     const lineMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
-        //     const line = new THREE.Line(lineGeom, lineMat);
-        //     scene.add(line);
-        // }
-
-        // transform_helper.position.copy(plan_pt.position);
-        // transform_helper.attach(plan_pt);
-        // scene.add(transform_helper);
-        // transform_helper.getObjectByName("gizmo").position.copy(pos);
-
-        // Call onClick
-        if (hit.object.onClick) hit.object.onClick(hit)
-
-  })
+    pfe_pathfinder.windowClick_eventListener(e);
 })
-//--------------
+
+var intervalId = window.setInterval(function(){
+    pfe_pathfinder.update_robot_position();
+}, 2000);
+//----------------------
 
 animate();
 
@@ -399,6 +225,20 @@ var click_plan = false;
 
 var url_base = get_url_base();
 var url_port = get_url_port();
+
+
+//--------PFE--------
+function remove_scene_mesh(){
+    scene.remove(scene_mesh);
+    scene_mesh = null;
+}
+
+function add_scene_mesh(){
+    scene.add(scene_mesh);
+    pfe_pathfinder.add_scene_mesh(scene_mesh);
+}
+
+//-------------------
 
 function connect_cmap() {
     costmap_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/costmap");
@@ -611,7 +451,7 @@ function connect_mesh() {
                 scene_mesh.add(back_mesh);
                 scene_mesh.rotateX(Math.PI / 2);
 
-                scene.add(scene_mesh);
+                add_scene_mesh(scene_mesh);
             }
             else {
                 const front_mesh = scene_mesh.getObjectByName("front_mesh");
@@ -629,8 +469,7 @@ function connect_mesh() {
             }
         }
         else {
-            scene.remove(scene_mesh);
-            scene_mesh = null;
+            remove_scene_mesh();
         }
     }
 
@@ -1504,8 +1343,7 @@ download_form_sub_btn.addEventListener("click", () => {
 clear_map_btn.addEventListener("click", () => {
     if (mesh_ws.readyState == WebSocket.OPEN) {
         mesh_ws.send("clear_map");
-        scene.remove(scene_mesh);
-        scene_mesh = null;
+        remove_scene_mesh();
         scene.remove(scene_costmap);
         scene_costmap = null;
 
@@ -1576,10 +1414,9 @@ function resetCamera()
 }
 
 function onWindowResize() {
+    pfe_pathfinder.windowResize(window.innerHeight - height_offset, window.innerWidth)
 
-    width = window.innerWidth
-    height = window.innerHeight - height_offset
-    const aspect = window.innerWidth / window.innerHeight;
+    const aspect = window.innerWidth / window.innerHeight;   
 
     perspectiveCamera.aspect = aspect;
     perspectiveCamera.updateProjectionMatrix();
