@@ -64,13 +64,36 @@ class PFE_Pathfinder {
     }
   }
 
-  update_robot_position(){
-    this.robotPosition.x += 0.2;
-    this.robotPosition.y = 0;
-    this.robotPosition.z = 0;
+  async update_robot_position(){
+    
+    let success = false;
 
-    //TODO : Faire en sorte qu'il le pogne du serveur
+    try {
+        const baseurl = window.location.hostname
+        console.log(baseurl);
+        const response = await fetch("http://" + baseurl + ":5000");
+        const result = await response.json();
 
+        if(result.hasOwnProperty("x") && result.hasOwnProperty("y") && result.hasOwnProperty("z") ){
+            if(!(isNaN(result["x"]) || isNaN(result["y"]) || isNaN(result["z"]))){
+                this.robotPosition.x = result["x"];
+                this.robotPosition.y = result["y"];
+                this.robotPosition.z = result["z"];
+                success = true
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        return;
+    }
+
+
+    if(success != true){
+        console.log("Failed to get robot position");
+        return;
+    }
+
+    console.log(this.robotPosition);
     if(this.robot_pose_x != null) this.scene.remove(this.robot_pose_x);
     if(this.robot_pose_y != null) this.scene.remove(this.robot_pose_y);
     if(this.robot_pose_z != null) this.scene.remove(this.robot_pose_z);

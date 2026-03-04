@@ -160,7 +160,7 @@ window.addEventListener('click', (e) => {
     pfe_pathfinder.windowClick_eventListener(e);
 })
 
-var intervalId = window.setInterval(function(){
+var intervalId = window.setInterval(async function(){
     pfe_pathfinder.update_robot_position();
 }, 2000);
 //----------------------
