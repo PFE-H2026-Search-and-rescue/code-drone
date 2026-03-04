@@ -122,9 +122,27 @@
     </div>
     <div id="inset" class = "w3-display-bottomright"></div>
 
+    <!-- TODO : Mettre ça en local dans 3rd party (Pas oublier d'avoir une version updaté à part de threejs) -->
+    <script type="importmap">
+    {
+      "imports": {
+        "@recast-navigation/core": "https://unpkg.com/@recast-navigation/core@0.38.0/dist/index.mjs",
+        "@recast-navigation/wasm": "https://unpkg.com/@recast-navigation/wasm@0.38.0/dist/recast-navigation.wasm-compat.js",
+        "@recast-navigation/generators": "https://unpkg.com/@recast-navigation/generators@0.38.0/dist/index.mjs",
+        "@recast-navigation/three": "https://unpkg.com/@recast-navigation/three@0.38.0/dist/index.mjs",
+        "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+        "three/addons/lines/LineMaterial.js": "https://unpkg.com/three@0.169.0/examples/jsm/lines/LineMaterial.js",
+        "three/addons/lines/LineSegments2.js": "https://unpkg.com/three@0.169.0/examples/jsm/lines/LineSegments2.js",
+        "three/addons/lines/LineSegmentsGeometry.js": "https://unpkg.com/three@0.169.0/examples/jsm/lines/LineSegmentsGeometry.js",
+        "three/examples/jsm/controls/OrbitControls": "https://unpkg.com/three@0.169.0/examples/jsm/controls/OrbitControls.js"
+      }
+    }
+  </script>
+
     <script src="./js/3rd_party/jdataview.js"></script>
     <script src="./js/3rd_party/jparser.js"></script>
-    <script src="./js/3rd_party/math.min.js"></script>
+    <script src="./js/3rd_party/math.min.js"></script>    
 
     <script src="./js/get_url.js"></script>
     <script>

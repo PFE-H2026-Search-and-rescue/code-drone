@@ -1,10 +1,18 @@
-import * as THREE from './3rd_party/three.module.js';
-import { OrbitControls } from './3rd_party/OrbitControls.js';
-import { OrbitControlsGizmo } from  "./3rd_party/OrbitControlsGizmo.js";
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FlyControls } from './3rd_party/FlyControls.js';
 import { FontLoader} from './3rd_party/FontLoader.js';
 import { TextGeometry} from './3rd_party/TextGeometry.js';
 import { TransformControls } from './3rd_party/TransformControls.js';
+import {
+    init as initRecastNavigation,
+    NavMeshQuery,
+} from '@recast-navigation/core';
+import { generateSoloNavMesh } from '@recast-navigation/generators';
+import {
+    DebugDrawer,
+    getPositionsAndIndices,
+} from '@recast-navigation/three';
 
 const pointcloud_format = {
     FLOAT_XYZ: 0,
@@ -22,6 +30,7 @@ const ControlsType = Object.freeze({
 })
 
 //---------PFE--------
+await initRecastNavigation();
 let width = 0
 let height = 0
 let intersects = []
@@ -168,9 +177,6 @@ let container2 = document.getElementById('inset');
 container2.width = insetWidth;
 container2.height = insetHeight;
 
-const controlsGizmo = new OrbitControlsGizmo(controls, { size:  300, padding: 8});
-controlsGizmo.domElement.style.marginTop = 0 + "px";
-container2.appendChild(controlsGizmo.domElement);
 
 
 //------PFE------
@@ -211,32 +217,124 @@ window.addEventListener('pointermove', (e) => {
   })
 })
 
-console.log("Hello")
 window.addEventListener('click', (e) => {
     console.log("Clicked")
+    if (intersects.length > 0){
+        const [positions, indices] = getPositionsAndIndices([
+            scene_mesh.getObjectByName("front_mesh")
+        ]);
+
+        // generate a solo navmesh
+        const cs = 0.05;
+        const ch = 0.05;
+        const walkableRadius = 0.2;
+        const { success, navMesh } = generateSoloNavMesh(positions, indices, {
+            cs,
+            ch,
+            walkableRadius: Math.round(walkableRadius / ch),
+        });
+
+        // debug draw the navmesh
+        const debugDrawer = new DebugDrawer();
+        debugDrawer.drawNavMesh(navMesh);
+        scene.add(debugDrawer);
+
+        // compute a path, ,  , , ,  mapper.js line 10109 > srcScript:279:17
+
+        const start = { x: -4.366065648965934, y: -0.5731215641615135, z: 0.10939914453444466 };
+        const end = { x: 1.5388214195262044, y: -0.688995680447261, z: -1.99214160183517 };
+
+        const navMeshQuery = new NavMeshQuery(navMesh);
+        const { path } = navMeshQuery.computePath(start, end);
+        console.log(path.toString())
+        // draw the path start
+        const startMarker = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 0.1, 0.1),
+            new THREE.MeshBasicMaterial({ color: 'blue' })
+        );
+        startMarker.position.set(start.x, start.y + 0.1, start.z);
+        scene.add(startMarker);
+
+        // draw the path end
+        const endMarker = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 0.1, 0.1),
+            new THREE.MeshBasicMaterial({ color: 'green' })
+        );
+        endMarker.position.set(end.x, end.y + 0.1, end.z);
+        scene.add(endMarker);
+
+        // draw the path line
+        const line = new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints(
+            path.map(({ x, y, z }) => new THREE.Vector3(x, y, z))
+            ),
+            new THREE.LineBasicMaterial({ color: 'blue' })
+        );
+        line.position.y += 0.1;
+        scene.add(line);
+    }
     intersects.forEach((hit) => {
         console.log("hit something : ")
         console.log(hit.point.x.toString() + ", " + hit.point.y.toString() + ", "+ hit.point.z.toString())
 
-        const plan_geom = new THREE.BufferGeometry();
-        const col = [0, 0, 0];
-        plan_geom.setAttribute('position', new THREE.Float32BufferAttribute(hit.point, 3));
-        plan_geom.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+        
+        // const pathfinder = new MeshPathfinder();
+        
+        // const start = new THREE.Vector3(0, 0, 0);
+        // const goal  = hit.point;
 
-        // plan_geom.computeBoundingSphere();
+        // pathfinder.init_ground(scene_mesh.getObjectByName("front_mesh"))
 
-        const material = new THREE.PointsMaterial({ size: 0.2, vertexColors: true });
 
-        plan_pt = new THREE.Points(plan_geom, material);
-        scene.add(plan_pt);
+        // let start_index = pathfinder._findClosestVertex(start);
+        // console.log("start : " + start_index.toString())
+
+        // if(start_index != -1){
+        //     let new_point = pathfinder.vertices[start_index];
+        //     const plan_geom = new THREE.BufferGeometry();
+        //     const col = [0, 0, 0];
+        //     plan_geom.setAttribute('position', new THREE.Float32BufferAttribute(new_point, 3));
+        //     plan_geom.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+        //     const material = new THREE.PointsMaterial({ size: 0.2, vertexColors: true });
+        //     plan_pt = new THREE.Points(plan_geom, material);
+        //     scene.add(plan_pt);
+        // }
+
+        // let end_index = pathfinder._findClosestVertex(goal);
+        // console.log("end : " + end_index.toString())
+
+        // if(end_index != -1){
+        //     let new_point = pathfinder.vertices[end_index];
+        //     const plan_geom = new THREE.BufferGeometry();
+        //     const col = [1, 0, 0];
+        //     plan_geom.setAttribute('position', new THREE.Float32BufferAttribute(new_point, 3));
+        //     plan_geom.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+        //     const material = new THREE.PointsMaterial({ size: 0.2, vertexColors: true });
+        //     plan_pt = new THREE.Points(plan_geom, material);
+        //     scene.add(plan_pt);
+        // }
+        
+        // const path = pathfinder.findPath(start, goal);
+        // console.log(path);
+        // if (path) {
+
+        //     const curve = new THREE.CatmullRomCurve3(path);
+        //     const smoothPoints = curve.getPoints(100);
+
+        //     const lineGeom = new THREE.BufferGeometry().setFromPoints(smoothPoints);
+        //     const lineMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+        //     const line = new THREE.Line(lineGeom, lineMat);
+        //     scene.add(line);
+        // }
 
         // transform_helper.position.copy(plan_pt.position);
         // transform_helper.attach(plan_pt);
         // scene.add(transform_helper);
         // transform_helper.getObjectByName("gizmo").position.copy(pos);
 
-    // Call onClick
-    if (hit.object.onClick) hit.object.onClick(hit)
+        // Call onClick
+        if (hit.object.onClick) hit.object.onClick(hit)
+
   })
 })
 //--------------
@@ -511,6 +609,7 @@ function connect_mesh() {
                 scene_mesh = new THREE.Group()
                 scene_mesh.add(front_mesh);
                 scene_mesh.add(back_mesh);
+                scene_mesh.rotateX(Math.PI / 2);
 
                 scene.add(scene_mesh);
             }
@@ -1283,7 +1382,7 @@ canvas.onclick = function getClicked3DPoint(evt) {
         transform_helper.position.copy(plan_pt.position);
         transform_helper.attach(plan_pt);
         scene.add(transform_helper);
-        transform_helper.getObjectByName("gizmo").position.copy(pos);
+        // transform_helper.getObjectByName("gizmo").position.copy(pos);
 
         click_plan = false;
     }
@@ -1458,7 +1557,7 @@ function createControls(controls_type) {
         controls.dragToLook = false;
         if (two_d.classList.contains("w3-blue-grey")) controls.rollSpeed = 0;
     }
-    perspectiveCamera.up.set(0, 0, -1);
+    // perspectiveCamera.up.set(0, 0, -1);
     perspectiveCamera.lookAt(0, 0, 0);
 
     controls.addEventListener('change',function() {
@@ -1472,7 +1571,7 @@ function resetCamera()
     perspectiveCamera.position.y = 0;
     perspectiveCamera.position.z = -25;
     perspectiveCamera.rotation.set(0, 0, 0);
-    perspectiveCamera.up.set(0, 0, -1);
+    // perspectiveCamera.up.set(0, 0, -1);
     perspectiveCamera.lookAt(0, 0, 0);
 }
 
