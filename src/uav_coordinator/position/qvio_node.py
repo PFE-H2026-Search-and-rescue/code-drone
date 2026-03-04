@@ -15,13 +15,14 @@
 import rclpy
 from rclpy.node import Node
 
-from sensor_msgs.msg import PointCloud2
+from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, LivelinessPolicy, HistoryPolicy
 
-class Point_Cloud_Node(Node):
+class QVIO_Node(Node):
 
     def __init__(self):
-        super().__init__('point_cloud_node')
+        super().__init__('qvio_node')
         qos_profile = QoSProfile(
         reliability=ReliabilityPolicy.BEST_EFFORT,
         durability=DurabilityPolicy.VOLATILE,
@@ -30,31 +31,29 @@ class Point_Cloud_Node(Node):
         history=HistoryPolicy.KEEP_LAST
                                                                                     )
         self.subscription = self.create_subscription(
-            PointCloud2,
-            '/voxl_mapper_aligned_ptcloud',
-            self.point_cloud_callback,
+            PoseStamped,
+            '/qvio',
+            self.qvio_callback,
             qos_profile=qos_profile)
 
         self.get_logger().info('qvio node started')
 
-    def point_cloud_callback(self, msg : PointCloud2):
-        self.get_logger().info("callback received")
+    def qvio_callback(self, msg : PoseStamped):
+        self.get_logger().info(str(msg.pose.position.x) + "," + str(msg.pose.position.y) + "," + str(msg.pose.position.z))
 
+    #def qvio_odemetry_callback(self, msg):
+    #    """Callback function for QVIO odometry messages"""
+    #    # Extract position
+    #    position = msg.pose.pose.position
+    #    # Extract orientation (quaternion)
+    #    orientation = msg.pose.pose.orientation
+    #    # Extract linear velocity
+    #    linear_vel = msg.twist.twist.linear
+    #    # Extract angular velocity
+    #    angular_vel = msg.twist.twist.angular
+    #
+    #    self.get_logger().info(
+    #        f'QVIO - Position: x={position.x:.3f}, y={position.y:.3f}, z={position.z:.3f} | '
+    #        f'Linear Vel: x={linear_vel.x:.3f}, y={linear_vel.y:.3f}, z={linear_vel.z:.3f}'
+    #    )
 
-
-def main(args=None):
-    rclpy.init(args=args)
-
-    mapper_node = Point_Cloud_Node()
-
-    rclpy.spin(mapper_node)
-
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    mapper_node.destroy_node()
-    rclpy.shutdown()
-
-
-if __name__ == '__main__':
-    main()

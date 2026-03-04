@@ -1,2 +1,34 @@
-/.venv/*
-.idea/*
+# ROS / colcon / catkin build artifacts
+/build/
+/install/
+/log/
+/devel/
+/client/
+
+# Workspace overlays and local envs
+/.venv/
+/venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS / misc
+.DS_Store
+Thumbs.db
