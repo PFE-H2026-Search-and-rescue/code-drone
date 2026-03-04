@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html>
+<title>ModalAI VOXL Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/w3.css">
+<link rel="icon" href="./images/portal.png">
+<link rel="import" href="header.html"> 
+<!--<script src = "./js/jmuxer.js"></script>-->
+<script type="text/javascript" src="./js/jmuxer.js"></script>
+
+<header>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+    $(function(){
+      $("#header").load("header.html", function(){
+        mode_btn.addEventListener("click", () => {
+            if (mode_btn.classList.contains("w3-black")) {
+                mode_btn.classList.replace("w3-black", "w3-white");
+                var x = document.getElementById("button_text");
+                x.textContent = "Dark";
+                document.body.style.background = "black";
+                var all = document.getElementById("img_center").getElementsByTagName("*");
+                for (var i=0, max=all.length; i < max; i++) {
+                    if (all[i].tagName != "TR" && all[i].tagName != "TBODY" && all[i].tagName != "TH" && all[i].tagName != "TABLE")
+                        all[i].style.color = "white";
+                }
+                localStorage.setItem("dark_mode","true");
+            }
+            else {
+                mode_btn.classList.replace("w3-white", "w3-black");
+                var x = document.getElementById("button_text");
+                x.textContent = "Light";
+                document.body.style.background = "white";
+                var all = document.getElementById("img_center").getElementsByTagName("*");
+                for (var i=0, max=all.length; i < max; i++) {
+                    if (all[i].tagName != "TR" && all[i].tagName != "TBODY" && all[i].tagName != "TH" && all[i].tagName != "TABLE")
+                        all[i].style.color = "black";
+                }
+                localStorage.setItem("dark_mode","false");
+            }
+        })
+        var dark_mode_status = localStorage.getItem("dark_mode");
+        if (dark_mode_status == "true"){
+            // we were in Dark on the previous page, so mimic thats
+            mode_btn.click();
+        }
+      });
+    });
+    </script>
+    <div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+        <h1>VOXL Web Portal</h1>
+    </div>
+</header>
+
+<body>
+    <center id="img_center">
+    <h3 id="name"></h3>
+    <div id = "img_block">
+        <!-- to be filled for multi view -->
+    </div>
+    <video id = "h264" autoplay muted style = "display: none;"></video>
+    <img id="image"/>
+    <br>
+    <br>
+
+    <table id="cam_control_tbl" class="w3-table-all" style="width: 60%;">
+        <!--
+        <tr id="zoom_control_row">
+            <td width="150">Zoom (x):</td>
+            <td width="50"><div id="zoom_value">1.0</div> </td>
+            <td><center>
+                <div class="zoom_slider_container">
+                    <input type="range" min="1.0" max="10.0" step="0.1" value="1.0" class="cam_control_slider" id="zoom_slider" data-value-id="zoom_value" data-control-cmd="zoom" position="relative" style="width: 90%;">
+                </div>
+                </center>
+            </td>
+        </tr>
+-->
+
+<!--
+        <tr id="eis_enable_control_row">
+            <td width="150">EIS Enable:</td>
+            <td width="100">
+                <div class="checkbox">
+                    <input type="checkbox" class="zoom_slider" id="eis_checkbox" data-control-cmd="en_eis" checked=1>
+                </div>
+            </td>
+            <td></td>
+        </tr>
+-->
+    </table>
+
+
+    <br>
+    <a> Debug Stats<br></a> 
+    <table id="stats" class="w3-table-all" style="width: 60%;">
+        <tr id="table_header" class="w3-green">
+            <th>Camera</th>
+            <th>Source</th>
+            <th>Format</th>
+            <th>Resolution</th>
+            <th id = "fps_actual">FPS Actual</th>
+            <th id = "fps_sending">FPS Sending</th>
+            <th id = "quality">Quality</th>
+            <th>Exposure(ms)</th>
+            <th>Gain</th>
+        </tr>
+    </table>
+    <br>
+    
+
+    <button id="save_current_image" class="w3-hide w3-button w3-green">Save Current Image</button>
+    <script id = "H264_remove_save_curr_img_button">
+        if (window.location.href.includes("h264")) {
+            var button_elem = document.getElementById("save_current_image");
+            button_elem.style.display = "none";
+        }
+    </script>
+    <button id="snapshot" class="w3-hide w3-button w3-green"  pipe = "snapshot">Snapshot</button>
+    <!--<button id = "record_btn" class = "w3-button w3-green">Start Recording</button>-->
+
+    </center>
+    <div class="checkbox" style="padding-left: 10px;">
+        <input type="checkbox" id="enable_cam_controls_checkbox" checked="0">
+    </div>
+    
+</body>
+
+<script src="./js/get_url.js"></script>
+<script src="./js/3rd_party/Macy.js"></script>
+<script id = "main_video_script">
+
+var url_base = get_url_base();
+var url_port = get_url_port();
+
+let cams, masonry, h264_ws, check_for_h264;
+
+masonry = new Macy({
+    container: '#img_block',
+    trueOrder: false,
+    waitForImages: true,
+    useOwnImageLoader: false,
+    debug: true,
+    mobileFirst: true,
+    columns: 1,
+    margin: {
+        y: 16,
+        x: '2%',
+    },
+    breakAt: {
+    760: {
+      margin: {
+        x: 20,
+      },
+      columns: 4
+    }
+  },
+});
+
+
+//console.log("URL base: " + url_base)
+//console.log("URL PORT: " + url_port)
+
+function mansory_cam_onclick(){
+    if (this.checked){
+        document.getElementById("img" + this.value).setAttribute("src", "/video_raw/"+this.value);
+    }
+    else {
+        document.getElementById("img" + this.value).setAttribute("src", "");
+        if (this.value.includes("h264")) {
+            var vid_elem = document.getElementById("h264");
+            vid_elem.style.display = "none";
+            var close_H264_pipe = new WebSocket("ws://" + url_base + ":" + url_port + "/close_h264/");
+            close_H264_pipe.onopen = function() {
+                console.log("Attempting to close down H264 pipe in multiview mode");
+            }
+            var stats_table = document.getElementById("stats");
+            if (stats_table.rows.length == 2) {
+                stats_table.deleteRow(1);
+            }
+        }
+    }
+}
+
+
+function vid_stats_click(){
+    document.getElementById("stats").classList.toggle("w3-hide");
+}
+
+var save_current_image_num = 0;
+var save_current_image_cam = "";
+var canvas = document.createElement("canvas");
+var frame_size_array = new Uint32Array(60);
+var frame_time_array = new Float64Array(60);
+var frame_size_array_cnt = 0;
+var bitrate = 0;
+var frame_time_start = 0
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+var ctx = canvas.getContext("2d");
+
+var link = document.createElement("a");
+
+function save_current_image() {
+    var currentDateTime = Math.round(Date.now() / 1000); 
+
+    link.download = save_current_image_cam + "_" + currentDateTime + ".png";
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    ctx.drawImage(image, 0, 0);
+
+    canvas.toBlob(function(blob){
+        link.href = URL.createObjectURL(blob);
+        link.click();
+    },'image/png');
+    save_current_image_num+=1;
+}
+
+function send_zoom_command(zoom) {
+    var cam_name = document.getElementById("image").getAttribute("pipe");
+
+    fetch("/_cmd/cam_control?cam_name="+cam_name+"&control_id=zoom&control_val=" + zoom).then(response => {})
+    //console.log("done zoom command");
+}
+
+function send_bitrate_command(bitrate) {
+    var cam_name = document.getElementById("image").getAttribute("pipe");
+
+    fetch("/_cmd/cam_control?cam_name="+cam_name+"&control_id=bitrate&control_val=" + bitrate).then(response => {})
+    //console.log("done bitrate command");
+}
+
+function send_quality_command(quality) {
+    var cam_name = document.getElementById("image").getAttribute("pipe");
+
+    fetch("/_cmd/cam_control?cam_name="+cam_name+"&control_id=quality&control_val=" + quality).then(response => {})
+    //console.log("done quality command");
+}
+
+function send_eis_command(val) {
+    var cam_name = document.getElementById("image").getAttribute("pipe");
+
+    fetch("/_cmd/cam_control?cam_name="+cam_name+"&control_id=en_eis&control_val=" + Math.floor(val)).then(response => {})
+    //console.log("done eis command");
+}
+
+function send_command_pipe() {
+    var snapshot_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/snapshot/" + document.getElementById("image").getAttribute("pipe"));
+    snapshot_ws.binaryType = "arraybuffer";
+    if (snapshot_ws.readyState == WebSocket.OPEN) {
+        snapshot_ws.send("HELLO");
+    }
+}
+
+function close_down_h264_stream() {
+    var single_cam_curr = localStorage.getItem("single_cam_curr");
+    var curr_cam_pipe = document.getElementById("image").getAttribute("pipe");
+    if (single_cam_curr != null && single_cam_curr != curr_cam_pipe) {
+        console.log("ATTEMPTING TO CLOSE: " + single_cam_curr);
+        check_for_h264.onopen = function() {
+            check_for_h264.send(single_cam_curr);
+        }
+    }
+}
+
+function send_cam_control_cmd(cmd, val) {
+    var cam_name = document.getElementById("image").getAttribute("pipe");
+    fetch("/_cmd/cam_control?cam_name="+cam_name+"&control_id=" + cmd + "&control_val=" + val).then(response => {})
+}
+
+//var zoom_slider    = document.getElementById("zoom_slider");
+//var eis_checkbox   = document.getElementById("eis_checkbox");
+
+//var zoom_val = document.getElementById("zoom_value");
+
+/*
+zoom_slider.oninput = function() {
+    var cmd = this.getAttribute("data-control-cmd");
+    send_cam_control_cmd(cmd,this.value);
+    //send_zoom_command(this.value);
+    //zoom_val.innerHTML = this.value + "x";
+    document.getElementById(this.getAttribute("data-value-id")).innerHTML = this.value;
+}
+*/
+
+/*
+eis_checkbox.onclick = function() {
+    var cmd = this.getAttribute("data-control-cmd");
+    send_cam_control_cmd(cmd,Math.floor(this.checked));
+    //send_eis_command(this.checked);
+    //console.log(this.checked);
+}
+*/
+
+//
+
+
+
+function add_cam_control_table_header(){
+    var row = document.createElement("tr");
+    row.id  = name + "cam_control_table_header_row";
+    row.setAttribute("class","w3-green");
+
+    var cell     = document.createElement("th");
+    var cellText = document.createTextNode("Name");
+
+    cell.appendChild(cellText);
+    row.appendChild(cell);
+
+    cell     = document.createElement("th");
+    cellText = document.createTextNode("Value");
+
+    cell.appendChild(cellText);
+    row.appendChild(cell);
+
+    cell     = document.createElement("th");
+    var cntr = document.createElement("center");
+    cellText = document.createTextNode("Control");
+
+    cntr.appendChild(cellText);
+    cell.appendChild(cntr);
+    row.appendChild(cell);
+
+    var tbl = document.getElementById("cam_control_tbl");
+    tbl.appendChild(row);
+}
+
+function create_cam_control_slider(name, display_name, min_val, max_val, default_val, step, cmd_name, local_storage_name){
+    var row = document.createElement("tr");
+    row.id  = name + "_control_row";
+
+    var cell     = document.createElement("td");
+    var cellText = document.createTextNode(display_name);
+    cell.setAttribute("width",150);
+    cell.appendChild(cellText);
+    row.appendChild(cell);
+
+    cell              = document.createElement("td");
+    var cellDiv       = document.createElement("div");
+    cellDiv.innerHTML = default_val;
+    cellDiv.id        = name + "_value";
+    cell.setAttribute("width",100);
+    cell.appendChild(cellDiv);
+    row.appendChild(cell);
+
+    var value_text_div = cellDiv;
+
+    cell     = document.createElement("td");
+    var cntr = document.createElement("center");
+    cellDiv  = document.createElement("div");
+    var sldr = document.createElement("input")
+
+    sldr.setAttribute("type","range");
+    sldr.setAttribute("min", min_val);
+    sldr.setAttribute("max", max_val);
+    sldr.setAttribute("step", step);
+    sldr.setAttribute("value", default_val);
+    sldr.setAttribute("class", "cam_control_slider");
+    sldr.setAttribute("style","width: 90%;")
+    sldr.id = name + "_slider";
+
+    sldr.oninput = function() {
+        send_cam_control_cmd(cmd_name,this.value);
+        value_text_div.innerHTML = this.value;
+
+        if (local_storage_name != null){
+            localStorage.setItem(local_storage_name,this.value);
+        }
+    }
+
+    function sliderWheelEvent(event) {
+        event.preventDefault();
+        //console.log("wheel: ",event.wheelDeltaY);
+        //console.log("range value type: " + typeof(zoom_slider.value));
+
+        var val = Number(this.value);
+
+        //non-linear zoom is more natural
+        if (event.wheelDeltaY < 0){
+            val = val * 0.9;
+        }
+        else{
+            val = val * 1.1;
+        }
+
+        this.value = val.toFixed(1);  //round to one decimal place
+        this.dispatchEvent(new Event('input', { bubbles: true })); //dispatch event so that change can be handled
+        //console.log(display_name + " slider : " + val + " " + this.value);
+    }
+    sldr.addEventListener("wheel", sliderWheelEvent);
+
+    cellDiv.appendChild(sldr);
+    cntr.appendChild(cellDiv);
+    cell.appendChild(cntr);
+    row.appendChild(cell);
+
+
+    var tbl = document.getElementById("cam_control_tbl");
+    tbl.appendChild(row);
+}
+
+
+var cam_controls_added = 0;
+function add_cam_controls(){
+    const urlParams = new URLSearchParams(window.location.search);
+    var cam_name = urlParams.get('cam');
+
+    var image = document.getElementById("image");
+    var vid_elem = document.getElementById("h264");
+
+    if (cam_name.includes("Multi-View")){
+        return;
+    }
+
+    add_cam_control_table_header();
+
+    if (cam_name.includes("encoded")){
+        create_cam_control_slider("bitrate",  "Bitrate (Mbps) :", 0.5, 5.0, 1.5, 0.1, "bitrate");
+    }
+    else {
+        create_cam_control_slider("quality",  "Quality (%) :", 1, 100, 70, 1, "quality", "jpg_quality");
+    }
+
+    if (cam_name.includes("misp")){
+        create_cam_control_slider("zoom",     "Zoom (x) :", 1.0, 10.0, 1.0, 0.1, "zoom");
+
+        var wheel_zoom_elem = image;
+        if (cam_name.includes("encoded")){
+            wheel_zoom_elem = vid_elem;
+        }
+
+        function handleWheelEvent(event) {
+            event.preventDefault();
+            //console.log("wheel: ",event.wheelDeltaY);
+            //console.log("range value type: " + typeof(zoom_slider.value));
+
+            var val = Number(zoom_slider.value);
+
+            //non-linear zoom is more natural
+            if (event.wheelDeltaY < 0){
+                val = val * 0.9;
+            }
+            else{
+                val = val * 1.1;
+            }
+
+            zoom_slider.value = val.toFixed(1);  //round to one decimal place
+            zoom_slider.dispatchEvent(new Event('input', { bubbles: true })); //dispatch event so that change can be handled
+            //console.log("zoom slider: " + val + " " + zoom_slider.value);
+        }
+        wheel_zoom_elem.addEventListener("wheel", handleWheelEvent);
+    }
+
+    create_cam_control_slider("fps",     "FPS :", 1.0, 60.0, 30.0, 1, "fps");
+    create_cam_control_slider("exposure", "Exposure (ms) :", 0.1, 33.0, 10.0, 0.1, "exposure");
+    create_cam_control_slider("gain",     "Gain (ISO) :", 100, 32000, 100, 10, "gain");
+
+    if (cam_name.includes("misp")){
+        create_cam_control_slider("gamma",    "Gamma :", 1.0, 5.0, 1.6, 0.05, "gamma");
+    }
+
+    if (!cam_name.includes("encoded")){
+        user_jpg_quality = localStorage.getItem("jpg_quality");
+        if (user_jpg_quality != null){
+            quality_slider.value = user_jpg_quality;
+            quality_slider.dispatchEvent(new Event('input', { bubbles: true })); //dispatch event so that change can be handled
+        }
+    }
+
+    cam_controls_added = 1;
+}
+
+var enable_cam_controls_checkbox = document.getElementById("enable_cam_controls_checkbox");
+
+enable_cam_controls_checkbox.checked = false;
+
+console.log(localStorage.getItem("enable_cam_controls"));
+if (localStorage.getItem("enable_cam_controls") == "true"){
+    add_cam_controls();
+    enable_cam_controls_checkbox.checked = true;
+}
+
+enable_cam_controls_checkbox.onclick = function() {
+    if (this.checked){
+        if (cam_controls_added == 0){
+            add_cam_controls();
+        }
+    }
+    
+    localStorage.setItem("enable_cam_controls", this.checked);
+}
+
+
+
+$(document).ready(function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    var name = document.getElementById("name");
+    var image = document.getElementById("image");
+    var image2 = document.getElementById("image2");
+    if(!urlParams.has('cam')){
+        name.innerHTML="No Camera Name Specified";
+    } else {
+        var cam_name = urlParams.get('cam');
+
+        name.innerHTML = cam_name;
+
+        if (name.innerHTML == "Multi-View"){
+            div = document.getElementById("img_block")
+            var check_list = []
+            var center = document.getElementById("img_center");
+
+            // first we need to fetch every single camera possible...
+            fetch('/_cmd/list_cameras').then(function(response) {
+                return response.text().then(function(text) {
+                    cams = text.split(" ");
+
+                    for(var i = 0; i < cams.length; i++){
+                        if (cams[i].length < 1) continue;
+                        
+                        if (cams[i].includes("snapshot")) { continue; }
+                        if (cams[i].includes("encoded"))  { continue; }
+                        if (cams[i].includes("bayer"))    { continue; }
+
+                        var outer = document.createElement("div");
+                        outer.setAttribute("class", "demo");
+
+                        var ele = document.createElement("img");
+                        ele.setAttribute("id",       "img"+cams[i]);
+                        ele.setAttribute("pipe",     cams[i]);
+                        ele.setAttribute("src", "");
+                        ele.setAttribute("class", "demo-image");
+
+                        console.log(cams[i]);
+
+                        var input = document.createElement("input");
+                        input.type = "checkbox";
+                        input.value = cams[i];
+                        input.checked=0;
+                        input.onclick = mansory_cam_onclick;
+
+                        outer.appendChild(input);
+                        var cam_text = document.createElement("a");
+                        cam_text.innerHTML = " "+ cams[i] +"<br>";
+                        outer.appendChild(cam_text);
+
+                        ele.textContent =getNiceName(cams[i]);
+                        if (cams[i].includes("h264") && cams[i].includes("small")) {
+                            var vid_elem = document.getElementById("h264");
+                            //vid_elem.videoWidth = 264;
+                            //vid_elem.videoHeight = 237;
+                            vid_elem.style.display = "none";
+                            outer.appendChild(vid_elem);
+                            input.id = "H264_button";
+                        }
+                        outer.appendChild(ele);
+                        div.appendChild(outer);
+                    }
+                });
+            });
+            recalc_int = setInterval(masonry_update, 1000);
+        }
+        else {
+            image.setAttribute("pipe", cam_name);
+
+            var vid_elem = document.getElementById("h264");
+            check_for_h264 = new WebSocket("ws://" + url_base + ":" + url_port + "/check_h264/");
+            check_for_h264.onopen = function() {
+                console.log("Checking for H264 stream");
+            }
+
+            check_for_h264.onmessage = function() {
+            }
+
+            /*
+            var vid_elem = document.getElementById("h264");
+            check_for_h264 = new WebSocket("ws://" + url_base + ":" + url_port + "/check_h264/");
+            check_for_h264.onopen = function() {
+                console.log("Checking for H264 stream");
+            }
+            check_for_h264.onmessage = function() {
+                if (image.naturalWidth > 0) {
+                    vid_elem.style.display = "none";
+                    image.style.display = "";
+                }
+                else {
+                    vid_elem.style.display = "";
+                    image.style.display = "none";
+                }
+            }
+            */
+
+            //add_cam_control_table_header();
+
+            if (cam_name.includes("encoded") == true) {
+                vid_elem.style.display = "";
+                image.style.display = "none";
+
+                var jmux_mux = new JMuxer({
+                    node: "h264",
+                    mode: "video", 
+                    flushingTime: 100,
+                    maxDelay: 100,
+                    debug: false,
+                    fps: 30,
+                    readFpsFromTrack: false
+                })
+
+                fetch("/video_raw/" + image.getAttribute("pipe")).then(response => {return response.body})
+                    .then(stream => {
+                        const reader = stream.getReader();
+                        let chunks = [];
+                        let feed_chunk = false;
+                        let chunky_chunk = []
+                        let first_chunk = []
+                        let is_first_chunk = true;
+                        let read_data = false;
+                        let frame_id = 0;
+
+                        function read() {
+                            reader.read().then(({done, value}) => {
+                                if (done) {
+                                    console.log("The End");
+                                    return;
+                                }
+                                const buffer = new Uint8Array(value);
+
+                                //bitrate calculation start
+                                //note that for Mjpg we could not do this because we don't actually receive the image and pass it to the browser,
+                                //instead we just set the image source and browser loads the image. Not clear how to get the loaded image size for mjpeg..
+
+                                frame_size_array[frame_size_array_cnt] = buffer.length * 8;
+                                frame_time_array[frame_size_array_cnt] = Date.now()/1000.0;
+
+                                //console.log(frame_size_array_cnt);
+                                //console.log(frame_time_array[frame_size_array_cnt]);
+                                
+                                let bitrate_sum = frame_size_array.reduce(function(pv, cv) { return pv + cv; }, 0);
+
+                                //average bitrate is sum of all bytes received over the period of time divided by the time it took to receive all of those frames
+                                let new_bitrate = bitrate_sum / (frame_time_array[frame_size_array_cnt] - frame_time_array[(frame_size_array_cnt+1) % frame_size_array.length]);
+
+                                if (frame_time_start == 0){
+                                    frame_time_start = frame_time_array[frame_size_array_cnt];
+                                }
+
+                                //let frame_duration = (frame_time_array[frame_size_array_cnt] - frame_time_array[(frame_size_array_cnt-1) % frame_size_array.length]) * 1000;
+                                //let frame_duration = (frame_time_array[frame_size_array_cnt] - frame_time_start);
+                                
+                                //console.log(frame_duration);
+                                //console.log(buffer.length);
+                                //frame_duration = 0.0;
+
+                                bitrate = bitrate * 0.975 + new_bitrate * 0.025;  //additional IIR low pass filter to smooth out displayed bitrate
+
+                                frame_size_array_cnt = (frame_size_array_cnt+1) % frame_size_array.length;
+                                //bitrate calculation end
+
+                                frame_id++;
+                                //console.log(buffer)
+
+                                //this part is looking for the header that starts with "--foo", which is 45 45 102 111 111 (ASCII)
+                                // the header "--foo" is pre-pended by the voxl-portal back-end (not sure if this explicit syncing is needed)
+                                for (let i = 0; i < buffer.length - 4; ++i) {
+                                    if (buffer[i] == 45 
+                                        && buffer[i + 1] == 45 
+                                        && buffer[i + 2] == 102 
+                                        && buffer[i + 3] == 111 
+                                        && buffer[i + 4] == 111)
+                                    {
+                                        //console.log(i)
+                                        const data_uint = new Uint8Array(chunky_chunk);
+                                        if (data_uint.length > 0) {
+                                            //console.log(data_uint)
+                                            //if (frame_id<30){
+                                                jmux_mux.feed({video: data_uint});
+                                            //}
+                                            //else {
+                                            //    jmux_mux.feed({video: data_uint, duration: frame_duration});
+                                            //}
+                                            //jmux_mux.cancelDelay();
+                                            //
+                                        }
+                                        chunky_chunk = []
+                                        chunky_chunk.push(buffer[i]);
+                                    }
+                                    else {
+                                        chunky_chunk.push(buffer[i]);
+                                    }
+
+                                    if (i == buffer.length - 5) {
+                                        chunky_chunk.push(buffer[i + 1]);
+                                        chunky_chunk.push(buffer[i + 2]);
+                                        chunky_chunk.push(buffer[i + 3]);
+                                        chunky_chunk.push(buffer[i + 4]);
+                                    }
+                                }
+                                read();
+                            })
+                        }
+
+                        read();
+                    })
+                    .catch(error => {
+                        console.log("Error");
+                    })
+
+            }
+            else {
+                
+                /*
+                function printMousePos(event) {
+                    var x = event.offsetX;  //event.clientX
+                    var y = event.offsetY;  //event.clientY
+                    console.log("click: " + x + ", " + y);
+                }
+                image.addEventListener("click", printMousePos);
+                */
+
+                image.setAttribute("src", "/video_raw/"+cam_name);
+                vid_elem.style.display = "none";
+                image.style.display = "";
+            }
+
+            //image.setAttribute("src", "/video_raw/"+cam_name);
+            function shutdown_previous_cam() {
+                var past_single_cam = localStorage.getItem("single_cam");
+                if (past_single_cam != null && past_single_cam != cam_name) {
+                    console.log("MONGOOSE SEND");
+                    check_for_h264.send(past_single_cam);
+                    check_for_h264.close();
+                }
+                localStorage.setItem("single_cam", cam_name);
+            }
+            setTimeout(shutdown_previous_cam, 500);
+
+            save_current_image_cam = cam_name;
+            var check_snapshot = new WebSocket("ws://" + url_base + ":" + url_port + "/check/" + document.getElementById("image").getAttribute("pipe"));
+            check_snapshot.binaryType = "arraybuffer";
+            if (check_snapshot.readyState == WebSocket.OPEN) {
+                check_snapshot.send("HELLO");
+            }
+            check_snapshot.onmessage = function(evt) {
+                var msg = evt.data
+                if (msg == "FOUND") {
+                }
+                else {
+                    document.getElementById("snapshot").style.display = "none"
+                }
+            }
+            document.getElementById("save_current_image").classList.toggle("w3-hide");
+            document.getElementById("snapshot").classList.toggle("w3-hide");
+            document.getElementById("save_current_image").onclick = save_current_image;
+            document.getElementById("snapshot").onclick = send_command_pipe;
+        }
+    }
+});
+
+let recalc_int;
+var recalc_count = 0;
+
+function masonry_update() {
+    masonry.recalculate(true, true);
+    fetch('/_cmd/list_cameras').then(function(response) {
+        return response.text().then(function(text) {
+            cams = text.split(" ");
+
+            for(var i = 0; i < cams.length; i++){
+                if(cams[i].length < 1) continue;
+
+                var outer = document.createElement("div");
+                outer.setAttribute("class", "demo");
+
+                if (document.getElementById("img" + cams[i])) continue;
+                
+                if (cams[i].includes("snapshot")) {
+                    continue;
+                }
+
+                if (cams[i].includes("encoded")) {
+                    continue;
+                }
+
+                if (cams[i].includes("bayer")) {
+                    continue;
+                }
+
+                var ele = document.createElement("img");
+                ele.setAttribute("id",       "img"+cams[i]);
+                ele.setAttribute("pipe",     cams[i]);
+                ele.setAttribute("src", "/video_raw/"+cams[i]);
+                ele.setAttribute("class", "demo-image");
+
+                var input = document.createElement("input");
+                input.type = "checkbox";
+                input.value = cams[i];
+                input.checked=0;
+                input.onclick = mansory_cam_onclick;
+
+                outer.appendChild(input);
+                var cam_text = document.createElement("a");
+                cam_text.innerHTML = " "+getNiceName(cams[i]) + "<br>";
+                outer.appendChild(cam_text);
+
+                ele.textContent =getNiceName(cams[i]);
+                outer.appendChild(ele);
+                div.appendChild(outer);
+            }
+        });
+    }).catch(function() {
+        console.log("Failed to fetch cameras");
+        clearInterval(recalc_int);
+        window.stop();
+    });
+    if (recalc_count > 10){
+        clearInterval(recalc_int);
+        recalc_int = setInterval(masonry_update, 4000);
+        recalc_count = -Infinity;
+    }
+    recalc_count++;
+}
+
+function getNiceName(string) {
+    // var nameList = string.split("_");
+    // for(var j = 0; j < nameList.length; j++){
+    //   if(nameList[j].length < 1) continue;
+    //   nameList[j] = nameList[j][0].toUpperCase() + nameList[j].substring(1);
+    // }
+    // return nameList.join(' ');
+    return string
+}
+
+function image_format_int_to_str(format){
+    switch (format){
+        case 0:
+            return 'IMAGE_FORMAT_RAW8';
+        case 1:
+            return 'IMAGE_FORMAT_NV12';
+        case 2:
+            return 'IMAGE_FORMAT_STEREO_RAW8';
+        case 3:
+            return 'IMAGE_FORMAT_H264';
+        case 4:
+            return 'IMAGE_FORMAT_H265';
+        case 5:
+            return 'IMAGE_FORMAT_RAW16';
+        case 6:
+            return 'IMAGE_FORMAT_NV21';
+        case 7:
+            return 'IMAGE_FORMAT_JPG';
+        case 8:
+            return 'IMAGE_FORMAT_YUV422';
+        case 9:
+            return 'IMAGE_FORMAT_YUV420';
+        case 10:
+            return 'IMAGE_FORMAT_RGB';
+        case 11:
+            return 'IMAGE_FORMAT_FLOAT32';
+        case 12:
+            return 'IMAGE_FORMAT_STEREO_NV21';
+        case 13:
+            return 'IMAGE_FORMAT_STEREO_RGB';
+        case 14:
+            return 'IMAGE_FORMAT_YUV422_UYVY';
+        case 15:
+            return 'IMAGE_FORMAT_STEREO_NV12';
+    }
+    return 'UNKNOWN';
+}
+var table = document.getElementById("stats");
+
+let MAX_SOCKET_RETRIES = 5;
+let curr_retries = 0; // track this
+
+function connect() {
+    var video_stats_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/video_stats");
+    video_stats_ws.binaryType = "arraybuffer";
+
+    video_stats_ws.onopen = function() {
+        console.log("[INFO] video_stats websocket open");
+        curr_retries = 0;
+    };
+
+    video_stats_ws.onmessage = function (evt) {
+        //console.log("RECEIVED CAMERA STATS");
+        if (document.getElementById("stats").classList.contains("w3-hide")) return;
+        var msg = evt.data;
+        var parser = new jParser(msg, {
+            meta: {
+                cam_count: 'int16',
+            },
+            video_stats: {
+                name: ['array', 'char', 128],
+                fps_sending: 'float32',
+                fps_actual: 'float32',
+                quality: 'uint8',
+                server_name: ['array', 'char', 128],
+                exposure: 'float32',
+                gain: 'int16',
+                format: 'int16'
+            }
+        });
+        var meta = parser.parse('meta');
+        var x = table.rows.length;
+
+        for (var i = 0; i < x-1; i++){
+            table.deleteRow(-1);
+        }
+
+        for (var i = 0; i < meta.cam_count; i++){
+            var video_stats = parser.parse('video_stats');
+
+            //console.log(video_stats);
+
+            var cam = "";
+            var server = "";
+            for (var j = 0; j < 128; j++){
+                if (video_stats.name[j] == '\x00') break;
+                else cam = cam.concat(video_stats.name[j]);
+            }
+            for (var j = 0; j < 128; j++){
+                if (video_stats.server_name[j] == '\x00') break;
+                else server = server.concat(video_stats.server_name[j]);
+            }
+
+            //if h264 is playing, image src attribute will be null
+            //instead of checking for attribute src, which will be null in case of h264, check pipe attribute
+            //if (document.getElementById("image").getAttribute("src") != null){
+            if (document.getElementById("image").getAttribute("pipe") != null){
+                //console.log(document.getElementById("image").getAttribute("pipe"))
+                if (document.getElementById("image").getAttribute("pipe") == cam){ 
+                    if (document.getElementById("image").getAttribute("pipe").includes("encoded")) {
+                        var elem_row = document.getElementById("quality");
+                        elem_row.textContent="Mbps"
+                        //elem_row.style.display = "none";
+                        
+                        var row = table.insertRow(-1);
+                        var cell0 = row.insertCell(0);
+                        var cell1 = row.insertCell(1);
+                        var cell2 = row.insertCell(2);
+                        var cell3 = row.insertCell(3);
+                        var cell4 = row.insertCell(4);
+                        var cell5 = row.insertCell(5);
+                        var cell6 = row.insertCell(6);
+                        var cell7 = row.insertCell(7);
+                        var cell8 = row.insertCell(8);
+                
+                        // Add some text to the new cells:
+                        cell0.innerHTML = cam;
+                        cell1.innerHTML = server;
+                        cell2.innerHTML = image_format_int_to_str(video_stats.format);
+                        cell3.innerHTML = document.getElementById("h264").videoWidth + "x" + document.getElementById("h264").videoHeight;
+                        cell4.innerHTML = video_stats.fps_actual.toFixed(1);
+                        cell5.innerHTML = video_stats.fps_sending.toFixed(1);
+                        cell6.innerHTML = (bitrate/1000000.0).toFixed(2);
+                        cell7.innerHTML = video_stats.exposure.toFixed(3);
+                        cell8.innerHTML = video_stats.gain;
+                    }
+                    else if (window.location.href.includes("snapshot")) {
+                        function render_snapshot_stats() {
+                            console.log("WILL NOW DISPLAY SNAPSHOT STATS");
+                            var row = table.insertRow(-1);
+                            var cell0 = row.insertCell(0);
+                            var cell1 = row.insertCell(1);
+                            var cell2 = row.insertCell(2);
+                            var cell3 = row.insertCell(3);
+                            var cell4 = row.insertCell(4);
+                            var cell5 = row.insertCell(5);
+                            var cell6 = row.insertCell(6);
+                    
+                            // Add some text to the new cells:
+                            cell0.innerHTML = cam;
+                            cell1.innerHTML = server;
+                            cell2.innerHTML = image_format_int_to_str(video_stats.format);
+                            cell3.innerHTML = document.getElementById("image").naturalWidth + "x" + document.getElementById("image").naturalHeight;
+                            cell4.innerHTML = video_stats.quality;
+                            cell5.innerHTML = video_stats.exposure.toFixed(3);
+                            cell6.innerHTML = video_stats.gain;
+                        }
+
+                        setTimeout(render_snapshot_stats, 500);
+                    }
+                    else {
+                        var img_width = document.getElementById("image").naturalWidth;
+                        var img_height = document.getElementById("image").naturalHeight;
+                        var vid_width = document.getElementById("h264").videoWidth;
+                        var vid_height = document.getElementById("h264").videoHeight;
+                        var row = table.insertRow(-1);
+                        var cell0 = row.insertCell(0);
+                        var cell1 = row.insertCell(1);
+                        var cell2 = row.insertCell(2);
+                        var cell3 = row.insertCell(3);
+                        var cell4 = row.insertCell(4);
+                        var cell5 = row.insertCell(5);
+                        var cell6 = row.insertCell(6);
+                        var cell7 = row.insertCell(7);
+                        var cell8 = row.insertCell(8);
+                
+                        // Add some text to the new cells:
+                        cell0.innerHTML = cam;
+                        cell1.innerHTML = server;
+                        cell2.innerHTML = image_format_int_to_str(video_stats.format);
+                        cell3.innerHTML = image.naturalWidth == 0 ? vid_width + "x" + vid_height : img_width + "x" + img_height;
+                        cell4.innerHTML = video_stats.fps_actual.toFixed(1);
+                        cell5.innerHTML = video_stats.fps_sending.toFixed(1);
+                        cell6.innerHTML = video_stats.quality;
+                        //cell6.innerHTML = document.getElementById("image").files[0].size;
+                        cell7.innerHTML = video_stats.exposure.toFixed(3);
+                        cell8.innerHTML = video_stats.gain;
+                    }
+                }
+                else {
+                    console.log("stats error");
+                }
+            }
+            else if (document.getElementById("img"+cam) && document.getElementById("img"+cam).getAttribute("src") != "") {
+                if (cam.includes("h264")) {
+                    var row = table.insertRow(-1);
+                    var cell0 = row.insertCell(0);
+                    var cell1 = row.insertCell(1);
+                    var cell2 = row.insertCell(2);
+                    var cell3 = row.insertCell(3);
+                    var cell4 = row.insertCell(4);
+                    var cell5 = row.insertCell(5);
+                    var cell6 = row.insertCell(6);
+                    var cell7 = row.insertCell(7);
+                    var cell8 = row.insertCell(8);
+                    
+                    // Add some text to the new cells:
+                    cell0.innerHTML = cam;
+                    cell1.innerHTML = server;
+                    cell2.innerHTML = image_format_int_to_str(video_stats.format);
+                    cell3.innerHTML = document.getElementById("h264").videoWidth + "x" + document.getElementById("h264").videoHeight;
+                    cell4.innerHTML = video_stats.fps_actual.toFixed(1);
+                    cell5.innerHTML = video_stats.fps_sending.toFixed(1);
+                    cell6.innerHTML = 345; //video_stats.quality;
+                    cell7.innerHTML = video_stats.exposure.toFixed(3);
+                    cell8.innerHTML = video_stats.gain; 
+                }else {
+                    var row = table.insertRow(-1);
+                    var cell0 = row.insertCell(0);
+                    var cell1 = row.insertCell(1);
+                    var cell2 = row.insertCell(2);
+                    var cell3 = row.insertCell(3);
+                    var cell4 = row.insertCell(4);
+                    var cell5 = row.insertCell(5);
+                    var cell6 = row.insertCell(6);
+                    var cell7 = row.insertCell(7);
+                    var cell8 = row.insertCell(8);
+            
+                    // Add some text to the new cells:
+                    cell0.innerHTML = cam;
+                    cell1.innerHTML = server;
+                    cell2.innerHTML = image_format_int_to_str(video_stats.format);
+                    cell3.innerHTML = document.getElementById("img"+cam).naturalWidth + "x" + document.getElementById("img"+cam).naturalHeight;
+                    cell4.innerHTML = video_stats.fps_actual.toFixed(1);
+                    cell5.innerHTML = video_stats.fps_sending.toFixed(1);
+                    cell6.innerHTML = 123; //video_stats.quality;
+                    cell7.innerHTML = video_stats.exposure.toFixed(3);
+                    cell8.innerHTML = video_stats.gain;
+                }
+            }
+        }
+    }
+
+    video_stats_ws.onclose = function(e) {
+        console.log('[INFO] Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+        curr_retries++;
+        if (curr_retries <= MAX_SOCKET_RETRIES)
+            setTimeout(function() {
+                connect();
+            }, 1000);
+        else console.log("[INFO] Giving up");
+    };
+
+    video_stats_ws.onerror = function(err) {
+        console.error('Socket encountered error: ', err.message, 'Closing socket');
+        video_stats_ws.close();
+    };
+
+    $(window).on('beforeunload', function(){
+        video_stats_ws.close();
+    });
+}
+
+connect();
+
+</script>
+<script id = "remove_fps_snapshot">
+    if (window.location.href.includes("snapshot")) {
+        var fps_actual_row = document.getElementById("fps_actual");
+        fps_actual_row.style.display = "none";
+
+        var fps_sending_row = document.getElementById("fps_sending");
+        fps_sending_row.style.display = "none";
+    }
+</script>
+
+<script id = "check_h264">
+    if (!(window.location.href.includes("h264"))) {
+        var video_elem = document.getElementById("h264");
+        //video_elem.style.display = "none"; 
+    }
+</script>
+<script id = "Close H264">
+    if (!window.location.href.includes("h264")) {
+        const url_base = get_url_base()
+        var close_h264 = new WebSocket("ws://" + url_base + ":" + url_port + "/close_h264/");
+        close_h264.onopen = function() {
+            console.log("WILL NOW ATTEMPT TO CLOSE H264 STREAM IF OPEN...");
+        }
+    }
+</script>
+<script id = "Close Snapshot">
+    if (!window.location.href.includes("snapshot")) {
+        const url_base = get_url_base()
+        var close_snapshot_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/close_snapshot/")
+        close_snapshot_ws.onopen = function() {
+            console.log("WILL NOW ATTEMPT TO CLOSE SNAPSHOT STREAM IF OPEN...");
+        }
+    }
+</script>
+</html>

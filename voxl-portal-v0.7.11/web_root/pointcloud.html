@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<title>ModalAI VOXL Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/w3.css">
+<link rel="icon" href="./images/portal.png">
+
+<header>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+    $(function(){
+      $("#header").load("header.html");
+    });
+    </script>
+    <div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+        <h1>VOXL Web Portal</h1>
+    </div>
+</header>
+<body>
+    <div id="options_div" class="w3-display-right"></div>
+    <div id="stream_div" class="resizable">
+        <!--<div id = "display_camera" class = "resizable"> </div>-->
+        <h3 id = "cam_name" style = "text-align: center; color: white;"></h3>
+        <button id="stream_remove" class="w3-hide w3-button w3-red" style = "position: absolute; top: 5px; right: 5px; opacity: 40%;">x</button>
+        <img src="" id="stream0" class="w3-hide">
+    </div>
+
+    <div class="w3-display-middle" style = "top: 100px">
+        <!--<div id="streamAcc" class="w3-hide w3-white w3-card"></div>-->
+        <div id="streamAcc" class="w3-hide w3-white w3-card" style = "position: relative;">
+            <div id = "dropdown_vertical_streamAcc" class = "w3-bar" style = "margin: 0; position: absolute; top: 50px; left: 50%; width: max-content; transform: translate(-50%, 0%); flex-wrap: wrap; flex-direction: row;">
+
+            </div>
+        </div>
+        <button class="w3-button w3-dark-grey" id="stream_add">
+            <img src="images/tv-icon.png"/>
+        </button>
+        <!--<button id="stream_remove" class="w3-hide w3-button w3-red">x</button>  object-fit: cover -->
+    </div>
+    <div id="inset"></div>
+
+    <script src="./js/3rd_party/jdataview.js"></script>
+    <script src="./js/3rd_party/jparser.js"></script>
+    <script src="./js/3rd_party/math.min.js"></script>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script src="./js/get_url.js"></script>
+
+    <script>
+        var script = document.createElement("script");
+        script.type = "module";
+        script.src = "./js/pointcloud.js";
+        document.getElementsByTagName("body")[0].appendChild(script);
+    </script>
+</body>
+
+</html>

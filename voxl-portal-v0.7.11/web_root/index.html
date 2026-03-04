@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<title>PFE - ModalAI VOXL Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/w3.css">
+<link rel="icon" href="./images/portal.png">
+
+<header>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+    $(function(){
+      $("#header").load("header.html", function(){
+        mode_btn.addEventListener("click", () => {
+            if (mode_btn.classList.contains("w3-black")) {
+                mode_btn.classList.replace("w3-black", "w3-white");
+                var x = document.getElementById("button_text");
+                x.textContent = "Dark";
+                document.body.style.background = "black";
+                document.getElementById("gui_prompt").style.color = "white";
+                localStorage.setItem("dark_mode","true");
+            }
+            else {
+                mode_btn.classList.replace("w3-white", "w3-black");
+                var x = document.getElementById("button_text");
+                x.textContent = "Light";
+                document.body.style.background = "white";
+                document.getElementById("gui_prompt").style.color = "black";
+                localStorage.setItem("dark_mode","false");
+            }
+        })
+        var dark_mode_status = localStorage.getItem("dark_mode");
+        if (dark_mode_status == "true"){
+            // we were in Dark on the previous page, so mimic thats
+            mode_btn.click();
+        }
+      });
+    });
+    </script>
+
+    <div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+        <h1>PFE - VOXL Web Portal</h1>
+    </div>
+</header>
+
+<body>
+
+    <h4 id="gui_prompt">&ensp; PFE - GUI for the VOXL platform</h4>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+0.7.11
+    * add imu and rangefinder to portal
+0.7.10
+    * Added Benchmark tab to display ov log data
+    * Barometer calibration updates
+0.7.9
+	* Multiple enhancements to the actuators tab functionality to make it more like QGC
+0.7.8
+	* Updated the run function for all motors test so it does sends sequentially
+0.7.7
+    * Added actuator tab for testing each of the motors, matching the ESCs to the correct motors, and reversing the direction of the motors
+0.7.6
+    * Updates to RC calibration to make it easier to use
+0.7.5
+    * fix debug and cal over adb port forwarding
+    * add camera controls for misp pipes
+0.7.4
+    * bump version to fix build
+0.7.3
+    * fix mavlink reconnection on page load breaking other pipes
+    * add baro cal
+    * add flight modes page
+0.7.2
+    * add accel, gyro, mag, level horizon cal
+0.7.1
+    * flush camera pipes completely when backed up instead of just dropping one frame at a time
+0.7.0
+    * fix url port lookup
+0.6.9
+    * health check page under debug shows inspect services, calibration files and live vibration values
+    * system check page under debug which runs the voxl health check 
+0.6.8
+    * Debug tab now has inspect services and system check
+0.6.7
+    * new page under debug for health check which runs a health check and displays the results in a table
+0.6.6
+    * Camera List refreshes every second
+    * render tof point clouds other than just "tof"
+    * fix tof confidence and intensity buttons
+0.6.5
+    * new page to download systemd service journals
+    * updates to health check
+0.6.4
+    * migrate to new tof2_data_t type
+    * auto restart service on crash
+0.6.3
+    * make gyro accel labels in fft visible again
+    * trim dark/light mode header
+    * add some more title text to version and services
+    * stop trying to "cleanup" the names of camera pipes
+0.6.2
+    * add support for RAW16 images
+0.6.1
+    * new page for VIO debug
+    * improve 3D viewports
+0.6.0
+    * Changed dark mode button to be more easily identifiable
+    * Mapper will only be accessible if voxl-mapper is installed
+    * Implemented hires small h264 video stream using JMuxer 
+    * Implemented hires snapshot camera
+    * Added new snapshot button to cameras that have the snapshot option enabled and this allows a snapshot command to be sent through that current camera pipe
+    * New option under debug tab that allows you to see voxl-version info
+    * New option under debug tab that allows you to inspect the services that are currently running
+    * Included current voxl-suite number in header 
+    * Table stats are now on by default  
+    * Multiview cameras are off by default allowing users to select which ones they wish to see 
+    * Added hires small h264 camera to available options in multiview mode 
+    * Fixed issue that caused header drop downs to become unresponsive 
+0.5.11
+    * added D0004 support in portal api support cpp
+0.5.10
+    * update arm/disarm logic in portal-parser
+    * add params to be loaded for D0004 in portal-parser
+0.5.9
+    * images now zoom with webpage
+    * Changed name of snapshot button
+0.5.8
+    * add D0005 option to portal-parser
+0.5.7
+    * mavlink listener discard GCS packets now
+0.5.6
+    * Update voxl-health-check route to return json
+    * Fix bug where a call to portal API would result in connection refused
+0.5.5
+    * updates to portal-parser param file paths
+0.5.3
+    * don't start service during configuration
+0.5.2
+    * overhaul autopilot health stats in header
+    * autopilot stats show by default, no more button
+0.5.1
+    * rename "Factory Test" to "Health Check"
+    * updated factory tests, added D0005
+0.5.0
+    * fix mapper 3d view button
+    * factory test based on SKU
+0.4.4
+    * begin adding experimental prod test REST API
+0.4.3
+    * add esdf format to mesh api
+0.4.2
+    * Add function to making 422 images planar so that tj can handle them properly
+0.4.1
+    * fft bugs, data arrangement and plot bounds Fixed
+    * fix infinite zoom bug with new plots when page was zoomed in/out
+0.4.0
+    * added PlatformCmd in cmd manager
+    * added fft management in imu manager, only voxl2 support for now
+    * dark mode now saves across session, applies to all pages
+    * cpu and imu plots redone
+    * added fft plots/page for voxl2
+0.3.3
+    * service file now waits for fs service
+    * mapper page now supports direct mesh file download
+    * cleaned up aligned pointcloud rendering
+    * updated pointcloud meta struct in both viewers
+0.3.2
+    * cleaned up video manager, now relies on blocking writes (mongoose >= 7.7.0-1)
+    * cleaned up pointcloud viewer, added controls and robustness
+0.3.1
+    * added CLIENT_FLAG_DISABLE_AUTO_RECONNECT to mesh_endpoint for blocking open
+0.3.0
+    * redefined mesh_api, now fetch <ip>/mesh_api/FILE_EXT to retreive the mesh over http
+    * added options for mesh file format in save mesh map page
+    * cmake warning cleanup
+    * fixed controls bug in pointcloud viewer
+0.2.9
+    * added mesh api, can now fetch <ip>/mesh.ply to recieve the mesh in ply format
+0.2.8
+    * Backfaces of map mesh is now transparent
+    * Fixed animation lags for map
+    * Fixed plan point being slightly offset from actualy clicked point
+    * Managers are now split into managers and group managers
+    * Cleaned up page manager logic for handling incoming connections
+    * Fixed issues with closing websockets and connection handling across all managers
+    * Requires libmodal-pipe >= 2.3.0
+0.2.7
+    * cleaned up general managers, added in manager_utils.h
+    * all websockets should support dynamic connections
+    * updated imu interface, dif names per platform
+    * pointcloud viewer better handling for large data streams
+    * ov9782 prep, added handling for stereo_nv12/nv21
+0.2.5
+    * cleaned up postinst
+0.2.4
+    * New CI Stuff
+    * costmap slider and label added to mapper page, css updated
+    * updated costmap cb, support dif voxel sizes
+    * send slice height cmds back to mapper
+    * NEEDS voxl-mapper >= v0.0.6 for these features
+0.2.3
+    * Added frame rate adjustment and modified quality control for video transmition
+    * Simplified FPS calculation on video
+0.2.2
+    * code refactor - managers cleaned up
+    * headers in include dir, no more hardcoded names/constants
+    * ci / repo updates
+0.2.1
+    * debug stats added per camera, giving server name, fps, exp, gain, res
+    * PX4 Info toggle button added, hiding flight info by default
+0.2.0
+    * mapping features mainlined
+    * snapshot added in individual cam mode
+0.1.6
+    * header manager added, removed sub managers for gps, batt, and flight mode
+    * single ws for all nav bar data
+0.1.5
+    * pointcloud viewer with axes inset for coordinate frame awareness
+    * flight mode status, arm status, and mavlink error message output added
+0.1.4
+    * multi-view camera page for all available image topics
+    * naive network awareness + throttling jpeg quality
+0.1.3
+    * dynamic pointcloud viewer
+0.1.2
+    * updated js side to match new cpu_stats_t struct
+0.1.1
+    * consolidate header into its own file that get pulled in by the other files
+    * create an independent video page
+    * cpu manager now pulls struct from cpu_monitor instead of a copied header
+0.1.0
+    * add configure script
+0.0.4
+    * Added debug plots for cpu/imu
+0.0.3
+    * Use modal start/stop signal handling and process control
+0.0.2
+    * Add support for NV12/21 (hires Camera)
+    * remove jpeg-turbo and mongoose submodules, now separate projects
+0.0.1
+    * initial beta release, streams cameras to web interface

@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html>
+	<title>ModalAI VOXL Portal</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="./css/w3.css">
+	<link rel="stylesheet" href="./css/xterm.min.css">
+	<link rel="icon" href="./images/portal.png">
+
+	<style>
+        body {
+			margin: 0;
+			height: 100vh
+        }
+		
+        #voxl-system-check {
+            width: 100%;
+            overflow-y: auto;
+            padding: 10px;
+			box-sizing: border-box;
+			position: relative;
+			font-size: smaller;
+			
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+			table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 2px;
+            text-align: center;
+        }
+		
+		.loader {
+			border: 16px solid #f3f3f3;
+			border-top: 16px solid #3498db;
+			border-radius: 50%;
+			width: 120px;
+			height: 120px;
+			animation: spin 2s linear infinite;
+			display: none;
+			margin: 20px auto;
+		}
+		@keyframes spin{
+			0% {transform: rotate(0deg);}
+			100% {transform: rotate(360deg);}
+		}
+    </style>
+	<header>
+		<script src="./js/3rd_party/jquery-3.6.0.js"></script>
+		<script src="./js/3rd_party/xterm.min.js"></script>
+		<script>
+		$(function(){
+			$("#header").load("header.html");
+		});
+		</script>
+		<div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+			<h1>VOXL Web Portal</h1>
+		</div>
+	</header>
+
+	<body>
+		<div>
+			<!-- <div class="w3-container w3-center" id="main-page"> 
+				<h3>Health Check</h3> -->
+				<div id = "voxl-system-check" style = "text-align:center;" >
+					<h2> VOXL System Check </h2>
+					<div id = "loading-spinner" class = "loader"></div>
+					<table id="health-check-table" border = "1" style="width:100%; border-collapse: collapse;">
+						<thead></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+				<script src="./js/voxl-system-check.js"></script>
+			</div>
+		</div>
+	</body>
+</html>

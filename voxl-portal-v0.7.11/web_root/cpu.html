@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html>
+<title>ModalAI VOXL Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/w3.css">
+<link rel="icon" href="./images/portal.png">
+
+<header>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+        $(function(){
+          $("#header").load("header.html", function(){
+            mode_btn.addEventListener("click", () => {
+                if (mode_btn.classList.contains("w3-black")) {
+                    var x = document.getElementById("button_text");
+                    x.textContent = "Dark";
+                    mode_btn.classList.replace("w3-black", "w3-white");
+                    document.body.style.background = "black";
+                    var all = document.getElementById("cpu_center").getElementsByTagName("*");
+                    for (var i=0, max=all.length; i < max; i++) {
+                        if (all[i].tagName != "TR" && all[i].tagName != "TBODY" && all[i].tagName != "TH" && all[i].tagName != "TABLE")
+                            all[i].style.color = "white";
+                    }
+                    localStorage.setItem("dark_mode","true");
+                }
+                else {
+                    mode_btn.classList.replace("w3-white", "w3-black");
+                    var x = document.getElementById("button_text");
+                    x.textContent = "Light";
+                    document.body.style.background = "white";
+                    var all = document.getElementById("cpu_center").getElementsByTagName("*");
+                    for (var i=0, max=all.length; i < max; i++) {
+                        if (all[i].tagName != "TR" && all[i].tagName != "TBODY" && all[i].tagName != "TH" && all[i].tagName != "TABLE")
+                            all[i].style.color = "black";
+                    }
+                    localStorage.setItem("dark_mode","false");
+                }
+            })
+            var dark_mode_status = localStorage.getItem("dark_mode");
+            if (dark_mode_status == "true"){
+                // we were in Dark on the previous page, so mimic thats
+                mode_btn.click();
+            }
+          });
+        });
+    </script>
+    <div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+        <h1>VOXL Web Portal</h1>
+    </div>
+</header>
+
+<body>
+
+<script src="./js/3rd_party/Macy.js"></script>
+<script src="./js/3rd_party/jdataview.js"></script>
+<script src="./js/3rd_party/jparser.js"></script>
+<script src="./js/3rd_party/plotly-2.4.2.min.js"></script>
+<script type="text/javascript" src="./js/3rd_party/smoothie.js"></script>
+
+<center id="cpu_center">
+
+<h3>VOXL Cpu Plotter</h3>
+
+
+<div id = "smoothie_block">
+
+    <div class="demo">
+        <input id="cpu_util_c" type="checkbox" checked="1">
+        <a>CPU Util (%)</a><br>
+        <canvas id="cpu_util_canvas" width="100%" height="400px"></canvas>
+        <div id="cpu_util_key">
+            <span>KEY:</span><br>
+            <div class="box" style="background-color: #ff0000;">
+            </div>
+            <span>cpu0</span>
+            <div class="box" style="background-color: #00ff00;">
+            </div>
+            <span>cpu1</span>
+            <div class="box" style="background-color: #0000ff;">
+            </div>
+            <span>cpu2</span>
+            <div class="box" style="background-color: #ffffff;">
+            </div>
+            <span>cpu3</span><br>
+            <div id="cpu_util_extra_cores" class="w3-hide">
+                <div class="box" style="background-color: #ffff00;">
+                </div>
+                <span>cpu4</span>
+                <div class="box" style="background-color: #ff69b4;">
+                </div>
+                <span>cpu5</span>
+                <div class="box" style="background-color: #ed6335;">
+                </div>
+                <span>cpu6</span>
+                <div class="box" style="background-color: #8db4ad;">
+                </div>
+                <span>cpu7</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo">
+        <input id="cpu_temp_c" type="checkbox" checked="1">
+        <a>CPU Temp (&#176C)</a><br>
+        <canvas id="cpu_temp_canvas" width="100%" height="400px"></canvas>
+        <div class="w3-hide" id="cpu_temp_key">
+            <span>KEY:</span><br>
+            <div class="box" style="background-color: #ff0000;">
+            </div>
+            <span>cpu0</span>
+            <div class="box" style="background-color: #00ff00;">
+            </div>
+            <span>cpu1</span>
+            <div class="box" style="background-color: #0000ff;">
+            </div>
+            <span>cpu2</span>
+            <div class="box" style="background-color: #ffffff;">
+            </div>
+            <span>cpu3</span><br>
+            <div id="cpu_temp_extra_cores" class="w3-hide">
+                <div class="box" style="background-color: #ffff00;">
+                </div>
+                <span>cpu4</span>
+                <div class="box" style="background-color: #ff69b4;">
+                </div>
+                <span>cpu5</span>
+                <div class="box" style="background-color: #ed6335;">
+                </div>
+                <span>cpu6</span>
+                <div class="box" style="background-color: #8db4ad;">
+                </div>
+                <span>cpu7</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo">
+        <input id="raw_data_c" type="checkbox">
+        <a>Raw Data</a><br>
+        <div class="w3-hide" id="raw_data_div">
+            <a id="term_cpu0">cpu0         xxx       xxx      xxx</a><br>
+            <a id="term_cpu1">cpu1         xxx       xxx      xxx</a><br>
+            <a id="term_cpu2">cpu2         xxx       xxx      xxx</a><br>
+            <a id="term_cpu3">cpu3         xxx       xxx      xxx</a><br>
+            <a id="term_cpu4" class="w3-hide">cpu4         xxx       xxx      xxx<br></a>
+            <a id="term_cpu5" class="w3-hide">cpu5         xxx       xxx      xxx<br></a>
+            <a id="term_cpu6" class="w3-hide">cpu6         xxx       xxx      xxx<br></a>
+            <a id="term_cpu7" class="w3-hide">cpu7         xxx       xxx      xxx<br></a>
+            <a id="term_cpu_tot">Total                           xxx</a><br>
+        </div>
+    </div>
+
+    <div class="demo">
+        <input id="mem_util_c" type="checkbox">
+        <a>Memory Util (%)</a><br>
+        <canvas class="w3-hide" id="mem_util_canvas" width="400%" height="400%"></canvas>
+    </div>
+
+
+    <div class="demo">
+        <input id="cpu_freq_c" type="checkbox">
+        <a>CPU Frequency (MHz)</a><br>
+        <canvas class="w3-hide" id="cpu_freq_canvas" width="100%" height="400px"></canvas>
+        <div class="w3-hide" id="cpu_freq_key">
+            <span>KEY:</span><br>
+            <div class="box" style="background-color: #ff0000;">
+            </div>
+            <span>cpu0</span>
+            <div class="box" style="background-color: #00ff00;">
+            </div>
+            <span>cpu1</span>
+            <div class="box" style="background-color: #0000ff;">
+            </div>
+            <span>cpu2</span>
+            <div class="box" style="background-color: #ffffff;">
+            </div>
+            <span>cpu3</span><br>
+            <div id="cpu_freq_extra_cores" class="w3-hide">
+                <div class="box" style="background-color: #ffff00;">
+                </div>
+                <span>cpu4</span>
+                <div class="box" style="background-color: #ff69b4;">
+                </div>
+                <span>cpu5</span>
+                <div class="box" style="background-color: #ed6335;">
+                </div>
+                <span>cpu6</span>
+                <div class="box" style="background-color: #8db4ad;">
+                </div>
+                <span>cpu7</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo">
+        <input id="gpu_util_c" type="checkbox">
+        <a>GPU Util (%)</a><br>
+        <canvas class="w3-hide" id="gpu_util_canvas" width="100%" height="400px"></canvas>
+    </div>
+
+    <div class="demo">
+        <input id="gpu_temp_c" type="checkbox">
+        <a>GPU Temp (&#176C)</a><br>
+        <canvas class="w3-hide" id="gpu_temp_canvas" width="100%" height="400px"></canvas>
+    </div>
+
+    <div class="demo">
+        <input id="gpu_freq_c" type="checkbox">
+        <a>GPU Frequency (MHz)</a><br>
+        <canvas class="w3-hide" id="gpu_freq_canvas" width="100%" height="400px"></canvas>
+    </div>
+
+    <div class="demo">
+        <input id="mem_temp_c" type="checkbox">
+        <a>Memory Temp (&#176C)</a><br>
+        <canvas class="w3-hide" id="mem_temp_canvas" width="100%" height="400px"></canvas>
+    </div>
+</div>
+
+
+</center>
+
+<script src="./js/get_url.js"></script>
+<script>
+
+var url_base = get_url_base();
+var url_port = get_url_port();
+
+// defined height of all of our containers
+let container_height = 400;
+    
+let masonry = new Macy({
+    container: '#smoothie_block',
+    trueOrder: false,
+    waitForImages: false,
+    useOwnImageLoader: false,
+    debug: true,
+    mobileFirst: true,
+    columns: 1,
+    margin: {
+        y: 16,
+        x: '2%',
+    },
+    breakAt: {
+    760: {
+      margin: {
+        x: 20,
+      },
+      columns: 3
+    }
+  },
+});
+
+
+// global variables
+let cpu_util_extra_cores = document.getElementById("cpu_util_extra_cores");
+let cpu_util_canvas = document.getElementById("cpu_util_canvas");
+let cpu_temp_extra_cores = document.getElementById("cpu_temp_extra_cores");
+let cpu_temp_canvas = document.getElementById("cpu_temp_canvas");
+let cpu_freq_extra_cores = document.getElementById("cpu_freq_extra_cores");
+let cpu_freq_canvas = document.getElementById("cpu_freq_canvas");
+let gpu_util_canvas = document.getElementById("gpu_util_canvas");
+let gpu_temp_canvas = document.getElementById("gpu_temp_canvas");
+let gpu_freq_canvas = document.getElementById("gpu_freq_canvas");
+let mem_temp_canvas = document.getElementById("mem_temp_canvas");
+let mem_util_canvas = document.getElementById("mem_util_canvas");
+
+let term_cpu0 = document.getElementById('term_cpu0');
+let term_cpu1 = document.getElementById('term_cpu1');
+let term_cpu2 = document.getElementById('term_cpu2');
+let term_cpu3 = document.getElementById('term_cpu3');
+let term_cpu4 = document.getElementById('term_cpu4');
+let term_cpu5 = document.getElementById('term_cpu5');
+let term_cpu6 = document.getElementById('term_cpu6');
+let term_cpu7 = document.getElementById('term_cpu7');
+let term_cpu_tot = document.getElementById('term_cpu_tot');
+
+// checkboxes
+let raw_data_c = document.getElementById("raw_data_c");
+let cpu_util_c = document.getElementById("cpu_util_c");
+let cpu_temp_c = document.getElementById("cpu_temp_c");
+let cpu_freq_c = document.getElementById("cpu_freq_c");
+let gpu_freq_c = document.getElementById("gpu_freq_c");
+let gpu_temp_c = document.getElementById("gpu_temp_c");
+let gpu_util_c = document.getElementById("gpu_util_c");
+let mem_temp_c = document.getElementById("mem_temp_c");
+let mem_util_c = document.getElementById("mem_util_c");
+
+// keys
+let cpu_util_key = document.getElementById("cpu_util_key");
+let cpu_temp_key = document.getElementById("cpu_temp_key");
+let cpu_freq_key = document.getElementById("cpu_freq_key");
+
+
+// listener functions for checkboxes
+raw_data_c.addEventListener("click", () => {
+    if (raw_data_c.checked){
+        raw_data_div.classList.remove("w3-hide");
+    }
+    else raw_data_div.classList.add("w3-hide");
+});
+
+cpu_util_c.addEventListener("click", () => {
+    if (cpu_util_c.checked){
+        cpu_util_canvas.classList.remove("w3-hide");
+        cpu_util_key.classList.remove("w3-hide");
+        cpu_util_canvas.height = container_height;
+    }
+    else {
+        cpu_util_canvas.classList.add("w3-hide");
+        cpu_util_key.classList.add("w3-hide");
+    }
+});
+
+cpu_temp_c.addEventListener("click", () => {
+    if (cpu_temp_c.checked){
+        cpu_temp_canvas.classList.remove("w3-hide");
+        cpu_temp_key.classList.remove("w3-hide");
+        cpu_temp_canvas.height = container_height;
+    }
+    else {
+        cpu_temp_canvas.classList.add("w3-hide");
+        cpu_temp_key.classList.add("w3-hide");
+    }
+});
+
+cpu_freq_c.addEventListener("click", () => {
+    if (cpu_freq_c.checked){
+        cpu_freq_canvas.classList.remove("w3-hide");
+        cpu_freq_key.classList.remove("w3-hide");
+        cpu_freq_canvas.height = container_height;
+    }
+    else {
+        cpu_freq_canvas.classList.add("w3-hide");
+        cpu_freq_key.classList.add("w3-hide");
+    }
+});
+
+gpu_freq_c.addEventListener("click", () => {
+    if (gpu_freq_c.checked){
+        gpu_freq_canvas.classList.remove("w3-hide");
+        gpu_freq_canvas.height = container_height;
+    }
+    else gpu_freq_canvas.classList.add("w3-hide");
+});
+
+gpu_temp_c.addEventListener("click", () => {
+    if (gpu_temp_c.checked){
+        gpu_temp_canvas.classList.remove("w3-hide");
+        gpu_temp_canvas.height = container_height;
+    }
+    else gpu_temp_canvas.classList.add("w3-hide");
+});
+
+gpu_util_c.addEventListener("click", () => {
+    if (gpu_util_c.checked){
+        gpu_util_canvas.classList.remove("w3-hide");
+        gpu_util_canvas.height = container_height;
+    }
+    else gpu_util_canvas.classList.add("w3-hide");
+});
+
+mem_temp_c.addEventListener("click", () => {
+    if (mem_temp_c.checked){
+        mem_temp_canvas.classList.remove("w3-hide");
+        mem_temp_canvas.height = container_height;
+    }
+    else mem_temp_canvas.classList.add("w3-hide");
+});
+
+mem_util_c.addEventListener("click", () => {
+    if (mem_util_c.checked){
+        mem_util_canvas.classList.remove("w3-hide");
+        mem_util_canvas.height = container_height;
+    }
+    else mem_util_canvas.classList.add("w3-hide");
+});
+
+// smoothie variables
+var cpu_util_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: 0,
+    maxValue: 100,
+    responsive: true,
+    enableDpiScaling: false
+});
+
+var cpu_temp_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: 20,
+    maxValue: 100,
+    responsive: true,
+    enableDpiScaling: false
+});
+
+var cpu_freq_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: 0,
+    maxValue: 2800,
+    responsive: true,
+    enableDpiScaling: false
+});
+
+var gpu_util_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: 0,
+    maxValue: 100,
+    responsive: true,
+    enableDpiScaling: false
+});
+
+var gpu_temp_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: 20,
+    maxValue: 100,
+    responsive: true,
+    enableDpiScaling: false
+});
+
+var gpu_freq_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: 0,
+    maxValue: 2000,
+    responsive: true,
+    enableDpiScaling: false
+});
+
+var mem_temp_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: 20,
+    maxValue: 100,
+    responsive: true,
+    enableDpiScaling: false
+});
+
+var mem_util_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: 0,
+    maxValue: 100,
+    responsive: true,
+    enableDpiScaling: false
+});
+
+
+// timeseries!
+var freq_cpu0 = new TimeSeries();
+var freq_cpu1 = new TimeSeries();
+var freq_cpu2 = new TimeSeries();
+var freq_cpu3 = new TimeSeries();
+var freq_cpu4 = new TimeSeries();
+var freq_cpu5 = new TimeSeries();
+var freq_cpu6 = new TimeSeries();
+var freq_cpu7 = new TimeSeries();
+
+var temp_cpu0 = new TimeSeries();
+var temp_cpu1 = new TimeSeries();
+var temp_cpu2 = new TimeSeries();
+var temp_cpu3 = new TimeSeries();
+var temp_cpu4 = new TimeSeries();
+var temp_cpu5 = new TimeSeries();
+var temp_cpu6 = new TimeSeries();
+var temp_cpu7 = new TimeSeries();
+
+var util_cpu0 = new TimeSeries();
+var util_cpu1 = new TimeSeries();
+var util_cpu2 = new TimeSeries();
+var util_cpu3 = new TimeSeries();
+var util_cpu4 = new TimeSeries();
+var util_cpu5 = new TimeSeries();
+var util_cpu6 = new TimeSeries();
+var util_cpu7 = new TimeSeries();
+
+var freq_gpu = new TimeSeries();
+var temp_gpu = new TimeSeries();
+var util_gpu = new TimeSeries();
+
+var mem_temp = new TimeSeries();
+var mem_usage = new TimeSeries();
+
+
+var cpu_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/cpu");
+cpu_ws.binaryType = "arraybuffer";
+
+function unhide_extra_cores() {
+    term_cpu4.classList.remove("w3-hide");
+    term_cpu5.classList.remove("w3-hide");
+    term_cpu6.classList.remove("w3-hide");
+    term_cpu7.classList.remove("w3-hide");
+    cpu_util_extra_cores.classList.remove("w3-hide");
+    cpu_temp_extra_cores.classList.remove("w3-hide");
+    cpu_freq_extra_cores.classList.remove("w3-hide");
+}
+
+// set up our smoothie streams and assign our timeseries
+// only need to do these once, then we just update the timeseries objects
+cpu_util_smoothie.streamTo(cpu_util_canvas, 1000);
+cpu_util_smoothie.addTimeSeries(util_cpu0, {lineWidth:2, strokeStyle: '#ff0000'});
+cpu_util_smoothie.addTimeSeries(util_cpu1, {lineWidth:2, strokeStyle: '#00ff00'});
+cpu_util_smoothie.addTimeSeries(util_cpu2, {lineWidth:2, strokeStyle: '#0000ff'});
+cpu_util_smoothie.addTimeSeries(util_cpu3, {lineWidth:2, strokeStyle: '#ffffff'});
+cpu_util_smoothie.addTimeSeries(util_cpu4, {lineWidth:2, strokeStyle: '#ffff00'});
+cpu_util_smoothie.addTimeSeries(util_cpu5, {lineWidth:2, strokeStyle: '#ff69b4'});
+cpu_util_smoothie.addTimeSeries(util_cpu6, {lineWidth:2, strokeStyle: '#ed6335'});
+cpu_util_smoothie.addTimeSeries(util_cpu7, {lineWidth:2, strokeStyle: '#8db4ad'});
+
+cpu_temp_smoothie.streamTo(cpu_temp_canvas, 1000);
+cpu_temp_smoothie.addTimeSeries(temp_cpu0, {lineWidth:2, strokeStyle: '#ff0000'});
+cpu_temp_smoothie.addTimeSeries(temp_cpu1, {lineWidth:2, strokeStyle: '#00ff00'});
+cpu_temp_smoothie.addTimeSeries(temp_cpu2, {lineWidth:2, strokeStyle: '#0000ff'});
+cpu_temp_smoothie.addTimeSeries(temp_cpu3, {lineWidth:2, strokeStyle: '#ffffff'});
+cpu_temp_smoothie.addTimeSeries(temp_cpu4, {lineWidth:2, strokeStyle: '#ffff00'});
+cpu_temp_smoothie.addTimeSeries(temp_cpu5, {lineWidth:2, strokeStyle: '#ff69b4'});
+cpu_temp_smoothie.addTimeSeries(temp_cpu6, {lineWidth:2, strokeStyle: '#ed6335'});
+cpu_temp_smoothie.addTimeSeries(temp_cpu7, {lineWidth:2, strokeStyle: '#8db4ad'});
+
+cpu_freq_smoothie.streamTo(cpu_freq_canvas, 1000);
+cpu_freq_smoothie.addTimeSeries(freq_cpu0, {lineWidth:2, strokeStyle: '#ff0000'});
+cpu_freq_smoothie.addTimeSeries(freq_cpu1, {lineWidth:2, strokeStyle: '#00ff00'});
+cpu_freq_smoothie.addTimeSeries(freq_cpu2, {lineWidth:2, strokeStyle: '#0000ff'});
+cpu_freq_smoothie.addTimeSeries(freq_cpu3, {lineWidth:2, strokeStyle: '#ffffff'});
+cpu_freq_smoothie.addTimeSeries(freq_cpu4, {lineWidth:2, strokeStyle: '#ffff00'});
+cpu_freq_smoothie.addTimeSeries(freq_cpu5, {lineWidth:2, strokeStyle: '#ff69b4'});
+cpu_freq_smoothie.addTimeSeries(freq_cpu6, {lineWidth:2, strokeStyle: '#ed6335'});
+cpu_freq_smoothie.addTimeSeries(freq_cpu7, {lineWidth:2, strokeStyle: '#8db4ad'});
+
+gpu_util_smoothie.streamTo(gpu_util_canvas, 1000);
+gpu_util_smoothie.addTimeSeries(util_gpu, {lineWidth:2, strokeStyle: '#00ff00'});
+
+gpu_temp_smoothie.streamTo(gpu_temp_canvas, 1000);
+gpu_temp_smoothie.addTimeSeries(temp_gpu, {lineWidth:2, strokeStyle: '#00ff00'});
+
+gpu_freq_smoothie.streamTo(gpu_freq_canvas, 1000);
+gpu_freq_smoothie.addTimeSeries(freq_gpu, {lineWidth:2, strokeStyle: '#00ff00'});
+
+mem_temp_smoothie.streamTo(mem_temp_canvas, 1000);
+mem_temp_smoothie.addTimeSeries(mem_temp, {lineWidth:2, strokeStyle: '#00ff00'});
+
+mem_util_smoothie.streamTo(mem_util_canvas, 1000);
+mem_util_smoothie.addTimeSeries(mem_usage, {lineWidth:2, strokeStyle: '#00ff00'});
+
+cpu_ws.onmessage = function (evt) {
+    var msg = evt.data;
+
+    var parser = new jParser(msg, {
+        cpu_stats_t: {
+                magic_number: 'uint32',
+                num_cpu: 'int32',
+                cpu_freq: ['array', 'float32', 8],
+                cpu_t: ['array', 'float32', 8],
+                cpu_t_max: 'float32',
+                cpu_load: ['array', 'float32', 8],
+                cpu_load_10s: 'float32',
+                total_cpu_load: 'float32',
+                gpu_freq: 'float32',
+                gpu_t: 'float32',
+                gpu_load: 'float32',
+                gpu_load_10s: 'float32',
+                mem_t: 'float32',
+                mem_total_mb: 'int32',
+                mem_use_mb: 'int32',
+                flags: 'uint32',
+                reserved: 'uint32'
+            },
+    });
+
+    var cpu_msg = parser.parse('cpu_stats_t');
+
+    // cpu term
+    term_cpu0.innerHTML = "cpu0       " + String(cpu_msg.cpu_freq[0].toFixed(1)) + "MHz     "    + cpu_msg.cpu_t[0].toFixed(1) + "C    " + String(cpu_msg.cpu_load[0].toFixed(2))+"%";
+    term_cpu1.innerHTML = "cpu1       " + String(cpu_msg.cpu_freq[1].toFixed(1)) + "MHz     "    + cpu_msg.cpu_t[1].toFixed(1) + "C    " + String(cpu_msg.cpu_load[1].toFixed(2))+"%";
+    term_cpu2.innerHTML = "cpu2       " + String(cpu_msg.cpu_freq[2].toFixed(1)) + "MHz     "    + cpu_msg.cpu_t[2].toFixed(1) + "C    " + String(cpu_msg.cpu_load[2].toFixed(2))+"%";
+    term_cpu3.innerHTML = "cpu3       " + String(cpu_msg.cpu_freq[3].toFixed(1)) + "MHz     "    + cpu_msg.cpu_t[3].toFixed(1) + "C    " + String(cpu_msg.cpu_load[3].toFixed(2))+"%";
+
+
+    // plots
+    freq_cpu0.append(new Date().getTime(), cpu_msg.cpu_freq[0]);
+    freq_cpu1.append(new Date().getTime(), cpu_msg.cpu_freq[1]);
+    freq_cpu2.append(new Date().getTime(), cpu_msg.cpu_freq[2]);
+    freq_cpu3.append(new Date().getTime(), cpu_msg.cpu_freq[3]);
+
+    temp_cpu0.append(new Date().getTime(), cpu_msg.cpu_t[0]);
+    temp_cpu1.append(new Date().getTime(), cpu_msg.cpu_t[1]);
+    temp_cpu2.append(new Date().getTime(), cpu_msg.cpu_t[2]);
+    temp_cpu3.append(new Date().getTime(), cpu_msg.cpu_t[3]);
+
+    util_cpu0.append(new Date().getTime(), cpu_msg.cpu_load[0]);
+    util_cpu1.append(new Date().getTime(), cpu_msg.cpu_load[1]);
+    util_cpu2.append(new Date().getTime(), cpu_msg.cpu_load[2]);
+    util_cpu3.append(new Date().getTime(), cpu_msg.cpu_load[3]);
+
+    freq_gpu.append(new Date().getTime(), cpu_msg.gpu_freq);
+    temp_gpu.append(new Date().getTime(), cpu_msg.gpu_t);
+    util_gpu.append(new Date().getTime(), cpu_msg.gpu_load);
+
+    mem_temp.append(new Date().getTime(), cpu_msg.mem_t);
+    mem_usage.append(new Date().getTime(), cpu_msg.mem_use_mb/cpu_msg.mem_total_mb * 100);
+
+    if(cpu_msg.num_cpu > 4){
+        // cpu term
+        unhide_extra_cores();
+        term_cpu4.innerHTML = "cpu4       " + String(cpu_msg.cpu_freq[4].toFixed(1)) + "MHz     "    + cpu_msg.cpu_t[4].toFixed(1) + "C    " + String(cpu_msg.cpu_load[4].toFixed(2))+"%<br>";
+        term_cpu5.innerHTML = "cpu5       " + String(cpu_msg.cpu_freq[5].toFixed(1)) + "MHz     "    + cpu_msg.cpu_t[5].toFixed(1) + "C    " + String(cpu_msg.cpu_load[5].toFixed(2))+"%<br>";
+        term_cpu6.innerHTML = "cpu6       " + String(cpu_msg.cpu_freq[6].toFixed(1)) + "MHz     "    + cpu_msg.cpu_t[6].toFixed(1) + "C    " + String(cpu_msg.cpu_load[6].toFixed(2))+"%<br>";
+        term_cpu7.innerHTML = "cpu7       " + String(cpu_msg.cpu_freq[7].toFixed(1)) + "MHz     "    + cpu_msg.cpu_t[7].toFixed(1) + "C    " + String(cpu_msg.cpu_load[7].toFixed(2))+"%<br>";
+
+        // plots
+        freq_cpu4.append(new Date().getTime(), cpu_msg.cpu_freq[4]);
+        freq_cpu5.append(new Date().getTime(), cpu_msg.cpu_freq[5]);
+        freq_cpu6.append(new Date().getTime(), cpu_msg.cpu_freq[6]);
+        freq_cpu7.append(new Date().getTime(), cpu_msg.cpu_freq[7]);
+
+        temp_cpu4.append(new Date().getTime(), cpu_msg.cpu_t[4]);
+        temp_cpu5.append(new Date().getTime(), cpu_msg.cpu_t[5]);
+        temp_cpu6.append(new Date().getTime(), cpu_msg.cpu_t[6]);
+        temp_cpu7.append(new Date().getTime(), cpu_msg.cpu_t[7]);
+
+        util_cpu4.append(new Date().getTime(), cpu_msg.cpu_load[4]);
+        util_cpu5.append(new Date().getTime(), cpu_msg.cpu_load[5]);
+        util_cpu6.append(new Date().getTime(), cpu_msg.cpu_load[6]);
+        util_cpu7.append(new Date().getTime(), cpu_msg.cpu_load[7]);
+    }
+
+    term_cpu_tot.innerHTML = "Total                         " + String(cpu_msg.total_cpu_load.toFixed(2)) + "%";
+
+    masonry.recalculate(true, true);
+};
+
+</script>
+
+</body>
+</html>

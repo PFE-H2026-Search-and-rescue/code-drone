@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+	<title>ModalAI VOXL Portal</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="./css/w3.css">
+	<link rel="stylesheet" href="./css/xterm.min.css">
+	<link rel="icon" href="./images/portal.png">
+    
+    <style> 
+        body {
+            margin: 0;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+    </style>
+	<header>
+		<script src="./js/3rd_party/jquery-3.6.0.js"></script>
+		<script src="./js/3rd_party/xterm.min.js"></script>
+		<script>
+		$(function(){
+			$("#header").load("header.html");
+		});
+		</script>
+		<div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+			<h1>VOXL Web Portal</h1>
+		</div>
+	</header>
+
+	<body>
+        <div style="margin-top: 10px; margin-left: 10px; font-size: 16px;">
+            <label style="margin-right: 5px;" for="enablePlotCheckBox">Enable Satellite Plot</label>
+            <input type="checkbox" id="enablePlotCheckBox">
+        </div>
+        <div style="margin-top: 50px;" id="satellitePlot"></div>
+	</body>
+	<script src="./js/get_url.js"></script>
+    <script src="./js/3rd_party/plotly-2.4.2.min.js"></script>
+    <script src="./js/gps_graph.js"></script>
+</html>

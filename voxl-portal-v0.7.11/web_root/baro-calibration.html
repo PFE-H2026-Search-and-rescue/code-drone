@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+	<title>ModalAI VOXL Portal</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="./css/w3.css">
+	<link rel="stylesheet" href="./css/xterm.min.css">
+	<link rel="icon" href="./images/portal.png">
+    
+    <style> 
+        body {
+            margin: 0;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+		table {
+			border-collapse: collapse; 
+		}
+
+		th, td {
+			border: 1px solid #ddd; 
+			height: 25px;
+			padding: 8px; 
+			text-align: left; 
+		}
+
+		th {
+			background-color: #ffffff; 
+			font-weight: normal;
+		}
+
+		.flex-container {
+			display: flex;
+			margin-bottom: 10px;
+		}
+
+		.too-hot-container {
+			display: none;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			background-color: #eeb2b2; /* Light gray background */
+			padding: 15px;
+			border-radius: 5px;
+			text-align: center;
+		}
+
+		.too-hot-temp {
+			font-size: 1em;
+			color: #333; /* Dark gray text */
+			margin-bottom: 8px;
+		}
+
+		.too-hot-container a {
+			display: inline-block;
+			cursor: pointer;
+			padding: 8px 15px;
+			background-color: #0000002b;
+			color: #000000;
+			text-decoration: none;
+			border-radius: 3px;
+		}
+    
+    </style>
+	<header>
+		<script src="./js/3rd_party/jquery-3.6.0.js"></script>
+		<script src="./js/3rd_party/xterm.min.js"></script>
+		<script>
+		$(function(){
+			$("#header").load("header.html");
+		});
+		</script>
+		<div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+			<h1>VOXL Web Portal</h1>
+		</div>
+	</header>
+
+	<body>
+		<div class="flex-container">
+			<div>
+				<button id="calibrate-baro-button" onClick="onCalibrateBaroButtonClicked()">Calibrate Barometer</button>
+			</div>
+			<div>
+				<button id="save-baro-params-button" onClick="onCalibrationBaroSaveParamsButtonClicked()">Save Parameters</button>
+			</div>
+			<div id="baro-progress" style="margin-top: 3px; margin-left: 20px;">
+				Progress: 0%
+			</div>
+			<div class="too-hot-container" id="too-hot-container">
+				<div id="too-hot-instruction" class="too-hot-temp" style="font-weight: bold;">
+					Barometer must be below 35°C, cool with a fan until it reaches that then hit continue after turning the fan off
+				</div>
+				<div class="too-hot-temp" style="font-weight: light;" id="too-hot-temp">
+					Current Temp: waiting...
+				</div>
+				<button id="continue-calibration-button" disabled onClick="onContinueButtonClicked()">
+					Continue
+				</button>
+			</div>
+		</div>
+		<table>
+			<tr>
+			  <th>TC_B_ENABLE</th>
+			  <th>TC_B0_ID</th>
+			  <th>TC_B0_TREF</th>
+			  <th>TC_B0_TMIN</th>
+			  <th>TC_B0_TMAX</th>
+			  <th>TC_B0_X0</th>
+			  <th>TC_B0_X1</th>
+			  <th>TC_B0_X2</th>
+			  <th>TC_B0_X3</th>
+			  <th>TC_B0_X4</th>
+			  <th>TC_B0_X5</th>
+			</tr>
+			<tr>
+			  <td id="tc-b-enable"></td> 
+			  <td id="tc-b0-id"></td> 
+			  <td id="tc-b0-tref"></td> 
+			  <td id="tc-b0-tmin"></td> 
+			  <td id="tc-b0-tmax"></td> 
+			  <td id="tc-b0-x0"></td> 
+			  <td id="tc-b0-x1"></td> 
+			  <td id="tc-b0-x2"></td> 
+			  <td id="tc-b0-x3"></td> 
+			  <td id="tc-b0-x4"></td> 
+			  <td id="tc-b0-x5"></td> 
+			</tr>
+		  </table>
+	</body>
+	<script src="./js/get_url.js"></script>
+    <script src="./js/baro_calibration.js"></script>
+</html>

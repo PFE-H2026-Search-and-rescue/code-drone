@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<title>ModalAI VOXL Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/w3.css">
+<link rel="icon" href="./images/portal.png">
+<link rel="import" href="header.html"> 
+<!--<script src = "./js/jmuxer.js"></script>-->
+<script type="text/javascript" src="./js/jmuxer.js"></script>
+
+<header>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+    $(function(){
+      $("#header").load("header.html");
+    });
+    </script>
+    <div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+        <h1>VOXL Web Portal</h1>
+    </div>
+</header>
+
+<body onload="fetchLogs()">
+    <a> Logs Stored on VOXL2<br></a> 
+
+    <table id="log_table" class="w3-table-all" style="width: 60%;">
+        <tr id="table_header" class="w3-green">
+            <th>Service</th>
+            <th>Download</th>
+        </tr>
+    </table>
+    <br>
+
+    <button onclick="callFunction()">Download Logs</button>
+
+    
+
+    <script>
+        function fetchLogs() {
+            fetch('/_cmd/list_logs').then(response => {
+                return response.text().then(function(text) {
+    
+                    var logs = text.split(" ");
+
+                    for(var i = 0; i < logs.length; i++){
+                        if(logs[i].length < 1) continue;
+
+                        var table = document.getElementById("log_table");
+                        var row = table.insertRow(-1);
+                        var service_cell = row.insertCell(0);
+                        var download_cell = row.insertCell(1);
+                        service_cell.innerHTML = logs[i];
+
+                        download_cell.innerHTML = "<button onclick=\"downloadLog('" + logs[i] + "')\">Download</button>";
+                        
+                    }
+                });
+            })
+        }
+
+        function downloadLog(log_name) {
+            fetch('/_cmd/download_log?log_name=' + log_name)
+            .then(response => {
+                return response.blob(); // Convert response to a Blob
+            })
+            .then(blob => {
+                // Use the download function to initiate the download
+                download(blob, log_name.split('.').slice(0, -1).join('.') + '.txt');
+            })
+            .catch(error => {
+                console.error('Error downloading log:', error);
+            });
+        }
+
+        function download(blob, filename) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>

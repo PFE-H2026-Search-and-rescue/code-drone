@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<title>ModalAI VOXL Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/w3.css">
+<link rel="icon" href="./images/portal.png">
+
+<header>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+        $(function(){
+          $("#header").load("header.html", function(){
+            mode_btn.addEventListener("click", () => {
+                if (mode_btn.classList.contains("w3-black")) {
+                    mode_btn.classList.replace("w3-black", "w3-white");
+                    var x = document.getElementById("button_text");
+                    x.textContent = "Dark";
+                    document.body.style.background = "black";
+                    var all = document.getElementById("fft_center").getElementsByTagName("*");
+                    for (var i=0, max=all.length; i < max; i++) {
+                        if (all[i].tagName != "TR" && all[i].tagName != "TBODY" && all[i].tagName != "TH" && all[i].tagName != "TABLE")
+                            all[i].style.color = "white";
+                    }
+                    localStorage.setItem("dark_mode","true");
+                }
+                else {
+                    mode_btn.classList.replace("w3-white", "w3-black");
+                    var x = document.getElementById("button_text");
+                    x.textContent = "Light";
+                    document.body.style.background = "white";
+                    var all = document.getElementById("fft_center").getElementsByTagName("*");
+                    for (var i=0, max=all.length; i < max; i++) {
+                        if (all[i].tagName != "TR" && all[i].tagName != "TBODY" && all[i].tagName != "TH" && all[i].tagName != "TABLE")
+                            all[i].style.color = "black";
+                    }
+                    localStorage.setItem("dark_mode","false");
+                }
+            })
+            var dark_mode_status = localStorage.getItem("dark_mode");
+            if (dark_mode_status == "true"){
+                // we were in Dark on the previous page, so mimic thats
+                mode_btn.click();
+            }
+          });
+        });
+    </script>
+    <div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+        <h1>VOXL Web Portal</h1>
+    </div>
+</header>
+
+<!-- <script>
+    if (document.body.style.background = "black") {
+        document.getElementById("button_text").textContent = "Dark";
+    }
+    else {
+        document.getElementById("button_text").textContent = "Light";
+    }
+</script> -->
+
+<script src="./js/3rd_party/Macy.js"></script>
+<script src="./js/3rd_party/jdataview.js"></script>
+<script src="./js/3rd_party/jparser.js"></script>
+<script src="./js/3rd_party/plotly-2.4.2.min.js"></script>
+<script type="text/javascript" src="./js/3rd_party/smoothie.js"></script>
+
+<center id="fft_center">
+
+<h3 id="imu_header">VOXL FFT Plotter</h3>
+
+<div class="demo" id="imu_fft">
+    <a>IMU FFT</a><br>
+    <input id="imu_fft_gyro_c" type="checkbox" checked="1">
+    <a>Gyro</a>
+    <input id="imu_fft_accel_c" type="checkbox">
+    <a>Accel</a>
+    <br>
+
+    <canvas id="fft_canvas" width="100%" height="500px"></canvas>
+    <div id="fft_key">
+        <span>KEY:</span><br>
+        <div id="gyro_key">
+        <div class="box" style="background-color: #ff0000;">
+        </div>
+        <span>Gyro X</span>
+        <div class="box" style="background-color: #00ff00;">
+        </div>
+        <span>Gyro Y</span>
+        <div class="box" style="background-color: #0000ff;">
+        </div>
+        <span>Gyro Z (rad/s)</span><br>
+        </div>
+        <div id="accel_key" class="w3-hide">
+        <div class="box" style="background-color: #ff0000;">
+        </div>
+        <span>Accel X</span>
+        <div class="box" style="background-color: #00ff00;">
+        </div>
+        <span>Accel Y</span>
+        <div class="box" style="background-color: #0000ff;">
+        </div>
+        <span>Accel Z (m/s&sup2;)</span>
+        </div>
+    </div>
+</div>
+
+</center>
+
+<script src="./js/get_url.js"></script>
+<script>
+
+var url_base = get_url_base();
+var url_port = get_url_port();
+
+// global variables
+let fft_canvas = document.getElementById("fft_canvas");
+let gyro_key = document.getElementById("gyro_key");
+let accel_key = document.getElementById("accel_key");
+
+// set the height of the plot
+const height_offset = document.getElementById("header").getBoundingClientRect().bottom * 5;
+fft_canvas.height = window.innerHeight - height_offset;
+
+// also add an event listener to do this for us as the page resizes
+window.addEventListener('resize', function(){
+    var t_height_offset = document.getElementById("header").getBoundingClientRect().bottom * 5;
+    fft_canvas.height = window.innerHeight - t_height_offset;
+});
+
+// checkboxes
+let imu_fft_gyro_c = document.getElementById("imu_fft_gyro_c");
+let imu_fft_accel_c = document.getElementById("imu_fft_accel_c");
+
+// keys
+let fft_key = document.getElementById("fft_key");
+
+// smoothie variables
+// before we create the chart, lets define a new formatter for our x axis labels
+// this is because the fft is not actually reltive to time
+let multiplier = 1;
+let timestamp_ratio = 1;
+
+function fft_time_formatter(timestamp){
+    return timestamp/timestamp_ratio + 'Hz';
+}
+
+var fft_smoothie = new SmoothieChart({
+    labels: {
+         showIntermediateLabels: true
+    },
+    tooltip: true,
+    grid: {
+        verticalSections: 10
+    },
+    minValue: 0,
+    maxValue: 0.25,
+    nonRealtimeData: true,
+    millisPerPixel: 15,
+    responsive: true,
+    enableDpiScaling: false,
+    timestampFormatter: fft_time_formatter
+});
+
+
+// listener functions for checkboxes
+imu_fft_gyro_c.addEventListener("click", () => {
+    fft_gyro_x.clear();
+    fft_gyro_y.clear();
+    fft_gyro_z.clear();
+
+    fft_accel_x.clear();
+    fft_accel_y.clear();
+    fft_accel_z.clear();
+    fft_smoothie.updateTooltip();
+
+    if (imu_fft_gyro_c.checked){
+        fft_smoothie.removeTimeSeries(fft_accel_x);
+        fft_smoothie.removeTimeSeries(fft_accel_y);
+        fft_smoothie.removeTimeSeries(fft_accel_z);
+        fft_smoothie.addTimeSeries(fft_gyro_x, {lineWidth:2, strokeStyle: '#ff0000'});
+        fft_smoothie.addTimeSeries(fft_gyro_y, {lineWidth:2, strokeStyle: '#00ff00'});
+        fft_smoothie.addTimeSeries(fft_gyro_z, {lineWidth:2, strokeStyle: '#0000ff'});
+
+        imu_fft_accel_c.checked = 0;
+        fft_smoothie.options.maxValue = 0.25;
+        gyro_key.classList.remove("w3-hide");
+        accel_key.classList.add("w3-hide");
+    }
+    else {
+        fft_smoothie.removeTimeSeries(fft_gyro_x);
+        fft_smoothie.removeTimeSeries(fft_gyro_y);
+        fft_smoothie.removeTimeSeries(fft_gyro_z);
+        fft_smoothie.addTimeSeries(fft_accel_x, {lineWidth:2, strokeStyle: '#ff0000'});
+        fft_smoothie.addTimeSeries(fft_accel_y, {lineWidth:2, strokeStyle: '#00ff00'});
+        fft_smoothie.addTimeSeries(fft_accel_z, {lineWidth:2, strokeStyle: '#0000ff'});
+
+        imu_fft_accel_c.checked = 1;
+        fft_smoothie.options.maxValue = 3.0;
+        gyro_key.classList.add("w3-hide");
+        accel_key.classList.remove("w3-hide");
+    }
+});
+
+window.addEventListener('load', function(){
+    imu_fft_gyro_c.checked = 1;
+    imu_fft_accel_c.checked = 0;
+});
+
+imu_fft_accel_c.addEventListener("click", () => {
+    fft_gyro_x.clear();
+    fft_gyro_y.clear();
+    fft_gyro_z.clear();
+
+    fft_accel_x.clear();
+    fft_accel_y.clear();
+    fft_accel_z.clear();
+    fft_smoothie.updateTooltip();
+
+    if (imu_fft_accel_c.checked){
+        fft_smoothie.removeTimeSeries(fft_gyro_x);
+        fft_smoothie.removeTimeSeries(fft_gyro_y);
+        fft_smoothie.removeTimeSeries(fft_gyro_z);
+        fft_smoothie.addTimeSeries(fft_accel_x, {lineWidth:2, strokeStyle: '#ff0000'});
+        fft_smoothie.addTimeSeries(fft_accel_y, {lineWidth:2, strokeStyle: '#00ff00'});
+        fft_smoothie.addTimeSeries(fft_accel_z, {lineWidth:2, strokeStyle: '#0000ff'});
+
+        imu_fft_gyro_c.checked = 0;
+        fft_smoothie.options.maxValue = 3.0;
+        gyro_key.classList.add("w3-hide");
+        accel_key.classList.remove("w3-hide");
+    }
+    else {
+        fft_smoothie.removeTimeSeries(fft_accel_x);
+        fft_smoothie.removeTimeSeries(fft_accel_y);
+        fft_smoothie.removeTimeSeries(fft_accel_z);
+        fft_smoothie.addTimeSeries(fft_gyro_x, {lineWidth:2, strokeStyle: '#ff0000'});
+        fft_smoothie.addTimeSeries(fft_gyro_y, {lineWidth:2, strokeStyle: '#00ff00'});
+        fft_smoothie.addTimeSeries(fft_gyro_z, {lineWidth:2, strokeStyle: '#0000ff'});
+
+        imu_fft_gyro_c.checked = 1;
+        fft_smoothie.options.maxValue = 0.25;
+        gyro_key.classList.remove("w3-hide");
+        accel_key.classList.add("w3-hide");
+    }
+});
+
+// timeseries!
+var fft_gyro_x = new TimeSeries();
+var fft_gyro_y = new TimeSeries();
+var fft_gyro_z = new TimeSeries();
+
+var fft_accel_x = new TimeSeries();
+var fft_accel_y = new TimeSeries();
+var fft_accel_z = new TimeSeries();
+
+
+// we also set up an fft websocket, but if we don't receive any data
+// the plots are never shown
+var fft_ws = new WebSocket("ws://" + url_base + ":" + url_port + "/fft");
+fft_ws.binaryType = "arraybuffer";
+
+// set up our smoothie streams and assign our timeseries
+// only need to do these once, then we just update the timeseries objects
+fft_smoothie.streamTo(fft_canvas, 0);
+fft_smoothie.addTimeSeries(fft_gyro_x, {lineWidth:2, strokeStyle: '#ff0000'});
+fft_smoothie.addTimeSeries(fft_gyro_y, {lineWidth:2, strokeStyle: '#00ff00'});
+fft_smoothie.addTimeSeries(fft_gyro_z, {lineWidth:2, strokeStyle: '#0000ff'});
+
+fft_ws.onmessage = function (evt) {
+    var msg = evt.data;
+    var parser = new jParser(msg, {
+        accel_array: {
+            accl_ms2: ['array', 'float32', 257],
+        },
+        gyro_array: {
+            gyro_rad: ['array', 'float32', 257],
+        },
+        fft_data: {
+            magic_number: 'uint32',
+            n_freq: 'int32',
+            max_freq_hz: 'float32',
+
+            accl_data: ['array', 'accel_array', 3],
+            gyro_data: ['array', 'gyro_array', 3],
+        },
+    });
+
+    var curr_fft = parser.parse('fft_data');
+
+    fft_gyro_x.clear();
+    fft_gyro_y.clear();
+    fft_gyro_z.clear();
+
+    fft_accel_x.clear();
+    fft_accel_y.clear();
+    fft_accel_z.clear();
+
+    multiplier = Math.floor(fft_canvas.width / curr_fft.n_freq * fft_smoothie.options.millisPerPixel);
+    timestamp_ratio = Math.floor(multiplier * (curr_fft.n_freq/curr_fft.max_freq_hz));
+
+    // this is gross because we cant use pointers or variable reference in js, so if statements instead
+    for (var i = 0; i < 3; i++){
+        for (var j = 0; j < curr_fft.n_freq; j++){
+            if (i==0){
+                fft_gyro_x.append((j*multiplier), curr_fft.gyro_data[i].gyro_rad[j]);
+                fft_accel_x.append((j*multiplier), curr_fft.accl_data[i].accl_ms2[j]);
+            }
+            else if (i==1){
+                fft_gyro_y.append((j*multiplier), curr_fft.gyro_data[i].gyro_rad[j]);
+                fft_accel_y.append((j*multiplier), curr_fft.accl_data[i].accl_ms2[j]);
+            }
+            else {
+                fft_gyro_z.append((j*multiplier), curr_fft.gyro_data[i].gyro_rad[j]);
+                fft_accel_z.append((j*multiplier), curr_fft.accl_data[i].accl_ms2[j]);
+            }
+        }
+    }
+}
+
+</script>
+
+</body>
+</html>

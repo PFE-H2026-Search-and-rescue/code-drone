@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html>
+<title>ModalAI VOXL Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/w3.css">
+<link rel="icon" href="./images/portal.png">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+
+<header>
+    <script src="./js/3rd_party/jquery-3.6.0.js"></script>
+    <script>
+    $(function(){
+      $("#header").load("header.html", function(){
+        mode_btn.addEventListener("click", () => {
+            if (mode_btn.classList.contains("w3-black")) {
+                mode_btn.classList.replace("w3-black", "w3-white");
+                var x = document.getElementById("button_text");
+                x.textContent = "Dark";
+                document.body.style.background = "black";
+                document.getElementById("gui_prompt").style.color = "white";
+                localStorage.setItem("dark_mode","true");
+            }
+            else {
+                mode_btn.classList.replace("w3-white", "w3-black");
+                var x = document.getElementById("button_text");
+                x.textContent = "Light";
+                document.body.style.background = "white";
+                document.getElementById("gui_prompt").style.color = "black";
+                localStorage.setItem("dark_mode","false");
+            }
+        })
+        var dark_mode_status = localStorage.getItem("dark_mode");
+        if (dark_mode_status == "true"){
+            // we were in Dark on the previous page, so mimic thats
+            mode_btn.click();
+        }
+      });
+    });
+    </script>
+
+    <div id="header" class="w3-container w3-green" style="height:50px; align-items: center; display:flex;">
+        <h1>VOXL Web Portal</h1>
+    </div>
+</header>
+
+<head>
+    <style>
+        #main-layout {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            flex-wrap: nowrap;
+        }
+
+        /* ========== RIGHT COLUMN ========== */
+        #right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: min(1280px, 50vw); /* key rule */
+            flex: 0 1 auto;
+        }
+
+        /* ========== LEFT COLUMN ========== */
+        #left-column {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            flex-grow: 1;
+            align-content: stretch;
+            justify-content: flex-start;
+        }
+
+        .chart {
+            flex: 1 1 45%;
+            max-width: 1000px;
+            min-width: 300px;
+            height: auto;
+            aspect-ratio: 2 / 1;         /* Controls height relative to width */
+            box-sizing: border-box;
+        }
+
+        .value-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 0px;
+            justify-items: start;
+            font-size: 0.95em;        /* slightly smaller font */
+            margin-top: 10px;
+        }
+
+        .value-grid .left,
+        .value-grid .right {
+            font-size: 1.2em;
+        }
+
+        .cam-features {
+            border: 1px solid #ccc;
+        }
+
+        .slider-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        }
+
+        .slider-wrapper input[type="range"] {
+        flex: 1;
+        max-width: 400px;
+        }
+
+        .slider-btn {
+        padding: 6px 12px;
+        font-size: 1.2em;
+        cursor: pointer;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <h4 id="gui_prompt">&ensp; Interface for VIO Benchmark</h4>
+    <select id="file-selector">
+        <option value="" disabled selected>Select a JSON file</option>
+    </select>
+
+    <select id="json-entry-selector">
+        <option value="" disabled selected>Select a result entry</option>
+    </select>      
+
+    <div id="main-layout">
+        <div id="left-column">
+            <div id="json-details" style="margin-top: 20px; font-family: monospace;"></div>
+            <canvas id="xPos" class="chart"></canvas>
+            <canvas id="yPos" class="chart"></canvas>
+            <canvas id="zPos" class="chart"></canvas>
+            <canvas id="quality" class="chart"></canvas>
+            <canvas id="featureCount" class="chart"></canvas>
+        </div>
+      
+        <div id="right-column">
+            <div class="slider-wrapper">
+                <button id="prev-frame" class="slider-btn">&lt;</button>
+                <input type="range" id="frame-slider" min="0" max="100" value="0">
+                <button id="next-frame" class="slider-btn">&gt;</button>
+            </div>
+              
+            <div class="value-grid">
+                <div class="left">Frame: <span id="frame-number">0</span></div>
+                <div></div>
+              
+                <div class="left">X: <span id="x-value">0</span></div>
+                <div class="right">Feature Count: <span id="feature-count">0</span></div>
+              
+                <div class="left">Y: <span id="y-value">0</span></div>
+                <div class="right">Quality: <span id="quality-value">0.00</span></div>
+              
+                <div class="left">Z: <span id="z-value">0</span></div>
+                <div></div>
+            </div>
+      
+            <canvas id="featureCanvas" class="cam-features" width="1280" height="720"></canvas>
+            <canvas id="featureCanvas1" class="cam-features" width="1280" height="720"></canvas>
+
+        </div>
+      </div>
+      
+
+    <script>
+
+        let loaded_dir = "";
+
+        async function loadFiles() {
+            try {
+                const response = await fetch("/benchmark/load_dirs");
+                const text = await response.text();
+                console.log("Raw response:", text);
+
+                const files = JSON.parse(text);
+                console.log("Parsed JSON:", files);
+
+                const dropdown = document.getElementById("file-selector");
+
+                // Clear all existing options
+                dropdown.innerHTML = "";
+
+                // Add back the default placeholder
+                const placeholder = document.createElement("option");
+                placeholder.value = "";
+                placeholder.disabled = true;
+                placeholder.selected = true;
+                placeholder.textContent = "Select a results folder";
+                dropdown.appendChild(placeholder);
+
+                // Exclude .csv files
+                files.forEach(file => {
+                        const option = document.createElement("option");
+                        option.value = file;
+                        option.textContent = file;
+                        dropdown.appendChild(option);
+                    });
+
+            } catch (error) {
+                console.error("Error loading files:", error);
+            }
+        }
+
+        document.getElementById("file-selector").addEventListener("focus", loadFiles);
+
+        document.getElementById("file-selector").addEventListener("change", function () {
+            const fileName = this.value;
+            if (fileName) {
+                loadJSONSummaryFile(fileName);  // pass selected JSON file
+            }
+        });
+
+
+        let jsonResultEntries = {};
+
+        async function loadJSONSummaryFile(fileName) {
+            try {
+                const response = await fetch("/benchmark/file/" + fileName + "/summary.json");
+                const jsonText = await response.text();
+                jsonResultEntries = JSON.parse(jsonText);
+                console.log("jsonResultEntries:", jsonResultEntries);
+
+                const selector = document.getElementById("json-entry-selector");
+                selector.innerHTML = `<option value="" disabled selected>Select a result entry</option>`;
+
+                Object.keys(jsonResultEntries).forEach((key) => {
+                    const option = document.createElement("option");
+                    option.value = key;
+                    option.textContent = key;
+                    selector.appendChild(option);
+                });
+
+                loaded_dir = fileName;
+            } catch (err) {
+                console.error("Failed to load JSON summary file:", err);
+                alert("Error reading summary file.");
+            }
+        }
+
+
+        document.getElementById("json-entry-selector").addEventListener("change", function () {
+            const selectedKey = this.value;
+            const entry = jsonResultEntries[selectedKey];
+            
+            if (!entry) return;
+
+            // Reset slider to frame 0
+            const slider = document.getElementById("frame-slider");
+            slider.value = 0;
+            slider.dispatchEvent(new Event("input"));
+
+            // Format and display details
+            const container = document.getElementById("json-details");
+            container.innerHTML = `<h4>${selectedKey}</h4><ul>` +
+                Object.entries(entry).map(([key, val]) => {
+                    if (key !== "csv") {
+                        return `<li><strong>${key}:</strong> ${val}</li>`;
+                    } else {
+                        return ""; // hide csv path
+                    }
+                }).join("") +
+                `</ul>`;
+
+            // Load and plot the CSV
+            if (entry.csv) {
+                loadAndPlot(loaded_dir + "/" + entry.csv);
+            } else {
+                console.warn("No CSV path found for selected JSON entry.");
+            }
+        });
+
+
+        const verticalLinePlugin = {
+            id: 'sliderLine',
+            afterDatasetsDraw(chart, args, options) {
+                const { ctx, chartArea: { left, right, top, bottom }, scales: { x } } = chart;
+                const index = chart.options.plugins.sliderLine?.frameIndex;
+
+                if (index == null || !x.getPixelForValue) return;
+
+                const xPixel = x.getPixelForValue(index);
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(xPixel, top);
+                ctx.lineTo(xPixel, bottom);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'black';
+                ctx.stroke();
+                ctx.restore();
+            }
+        };
+
+        Chart.register(verticalLinePlugin);
+
+        function createChart(ctx, label, data, color) {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.xValues,
+                    datasets: [{
+                        label: label,
+                        data: data.yValues,
+                        borderColor: color,
+                        pointRadius: 0,
+                        fill: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    // interaction: {
+                    //     // mode: 'index',       // Track the X position only
+                    //     intersect: false     // Don't highlight points on hover
+                    // },
+                    plugins: {
+                        tooltip: { enabled: false },
+                        legend: { display: true },
+                        sliderLine: {
+                            frameIndex: 0  // initialize with 0
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Frame' } 
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: `${label} (m)`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadJSON() {
+            const dropdown = document.getElementById("file-selector");
+            const fileName = dropdown.value;
+
+            if (!fileName) {
+                alert("Please select a file from the dropdown.");
+                return;
+            }
+
+            try {
+                const response = await fetch("/benchmark/file/" + fileName);
+                const jsonText = await response.text();
+                const data = JSON.parse(jsonText);
+
+                // Extract object inside root key
+                const rootKey = Object.keys(data)[0];
+                const values = data[rootKey];
+
+                // Format and display info
+                const container = document.getElementById("json-details");
+                container.innerHTML = `<h4>${rootKey}</h4><ul>` +
+                    Object.entries(values).map(([key, val]) => {
+                        if (key !== "csv") {
+                            return `<li><strong>${key}:</strong> ${val}</li>`;
+                        } else {
+                            return "";
+                        }
+                    }).join("") +
+                    `</ul>`;
+                
+                if (values.csv) {
+                    loadAndPlot(values.csv);
+                } else {
+                    console.warn("No csv found in JSON.");
+                }
+
+            } catch (err) {
+                console.error("Failed to load JSON:", err);
+                alert("Error loading JSON file.");
+            }
+        }
+    
+
+        // Load and plot the selected CSV file
+        async function loadAndPlot(fileName) {
+            // Destroy any existing charts before creating new ones
+            if (window.xChart) window.xChart.destroy();
+            if (window.yChart) window.yChart.destroy();
+            if (window.zChart) window.zChart.destroy();
+            if (window.qualityChart) window.qualityChart.destroy();
+            if (window.featureCountChart) window.featureCountChart.destroy();
+
+
+            try {
+                const response = await fetch("/benchmark/file/" + fileName);
+                const csvText = await response.text();
+                const rows = csvText.split("\n").map(row => row.split(","));
+
+                const xValues = [];
+                const xData = [];
+                const yData = [];
+                const zData = [];
+                const qualityData = [];
+                const featureCountData = [];
+
+                featureFrames = [];
+
+                rows.forEach(row => {
+                    if (row.length < 16) return; // Skip short lines
+
+                    const frameIndex = parseInt(row[0]);
+                    const features = [];
+
+                    const metadataOffset = 16; // Pose and IMU data
+                    const nTracked = parseInt(row[15]); // num features tracked in this frame
+
+                    for (let i = 0; i < nTracked; i++) {
+                        const base = metadataOffset + i * 4;
+                        const id = row[base];
+                        const cam_id = row[base + 1];
+                        const x = parseFloat(row[base + 2]);
+                        const y = parseFloat(row[base + 3]);
+
+                        if (!isNaN(x) && !isNaN(y)) {
+                            features.push({ id, cam_id, x, y });
+                        }
+                    }
+
+                    featureFrames.push(features);
+                });
+
+                drawFeatureFrame(0);
+
+                function drawFeatureFrame(frameIndex) {
+                    const canvas = document.getElementById("featureCanvas");
+                    const canvas1 = document.getElementById("featureCanvas1");
+                    const ctx = canvas.getContext("2d");
+                    const ctx1 = canvas1.getContext("2d");
+
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+
+                    const features = featureFrames[frameIndex] || [];
+
+                    features.forEach(f => {
+
+                        if (f.cam_id == 0) {
+                            const size = 6;
+                            ctx.fillStyle = "red";
+                            ctx.fillRect(f.x - size / 2, f.y - size / 2, size, size);
+                            
+                            ctx.fillStyle = "black";
+                            ctx.font = "12px sans-serif";
+                            ctx.fillText(f.id, f.x + 6, f.y - 6);
+                        }
+                        if (f.cam_id == 1) {
+                            const size = 6;                            
+                            ctx1.fillStyle = "blue";
+                            ctx1.fillRect(f.x - size / 2, f.y - size / 2, size, size);
+
+                            ctx1.fillStyle = "black";
+                            ctx1.font = "12px sans-serif";
+                            ctx1.fillText(f.id, f.x + 6, f.y - 6);
+                        }
+                    });
+                }
+
+                document.getElementById("frame-slider").addEventListener("input", (e) => {
+                    const frame = parseInt(e.target.value);
+                    drawFeatureFrame(frame);
+                });
+
+
+                rows.forEach(row => {
+                    if (row.length >= 2) {
+                        xValues.push(row[0].trim());
+                        xData.push(parseFloat(row[3].trim()));
+                        yData.push(parseFloat(row[4].trim()));
+                        zData.push(parseFloat(row[5].trim()));
+                        qualityData.push(parseFloat(row[2].trim()));
+                        featureCountData.push(parseInt(row[15].trim()));
+                    }
+                });
+
+                // Update the slider range based on the number of frames
+                const slider = document.getElementById("frame-slider");
+                const prevBtn = document.getElementById("prev-frame");
+                const nextBtn = document.getElementById("next-frame");
+
+                prevBtn.addEventListener("click", () => {
+                    let value = parseInt(slider.value);
+                    if (value > parseInt(slider.min)) {
+                        slider.value = value - 1;
+                        slider.dispatchEvent(new Event("input")); // trigger slider update
+                    }
+                });
+
+                nextBtn.addEventListener("click", () => {
+                    let value = parseInt(slider.value);
+                    if (value < parseInt(slider.max)) {
+                        slider.value = value + 1;
+                        slider.dispatchEvent(new Event("input")); // trigger slider update
+                    }
+                });
+
+
+                slider.max = xValues.length - 1;
+
+                // Create the X, Y, and Z position charts
+                const xCtx = document.getElementById("xPos").getContext("2d");
+                const yCtx = document.getElementById("yPos").getContext("2d");
+                const zCtx = document.getElementById("zPos").getContext("2d");
+                const qualityCtx = document.getElementById("quality").getContext("2d");
+                const featureCountCtx = document.getElementById("featureCount").getContext("2d");
+
+                window.xChart = createChart(xCtx, "X Position", { xValues, yValues: xData }, "red");
+                window.yChart = createChart(yCtx, "Y Position", { xValues, yValues: yData }, "green");
+                window.zChart = createChart(zCtx, "Z Position", { xValues, yValues: zData }, "blue");
+                window.qualityChart = createChart(qualityCtx, "Quality", { xValues, yValues: qualityData }, "blue");
+                window.featureCountChart = createChart(featureCountCtx, "Feature Count", { xValues, yValues: featureCountData }, "blue");
+
+                // Handle slider movement
+                slider.addEventListener("input", function() {
+                    const frameIndex = parseInt(slider.value);
+                    updatePositionDisplay(frameIndex, xData, yData, zData, qualityData, featureCountData);
+
+                    // Update frame line on each chart
+                    window.xChart.options.plugins.sliderLine.frameIndex = frameIndex;
+                    window.yChart.options.plugins.sliderLine.frameIndex = frameIndex;
+                    window.zChart.options.plugins.sliderLine.frameIndex = frameIndex;
+                    window.qualityChart.options.plugins.sliderLine.frameIndex = frameIndex;
+                    window.featureCountChart.options.plugins.sliderLine.frameIndex = frameIndex;
+
+                    // Trigger re-render
+                    window.xChart.update('none');
+                    window.yChart.update('none');
+                    window.zChart.update('none');
+                    window.qualityChart.update('none');
+                    window.featureCountChart.update('none');
+                });
+
+                // Update position display for the initial frame
+                updatePositionDisplay(0, xData, yData, zData, qualityData, featureCountData);
+
+
+            } catch (error) {
+                console.error("Error loading or plotting CSV data:", error);
+            }
+        }
+        // Function to update the position display text
+        function updatePositionDisplay(index, xData, yData, zData, qualityData, featureCountData) {
+            document.getElementById("frame-number").textContent = index;
+            document.getElementById("x-value").textContent = xData[index].toFixed(2);
+            document.getElementById("y-value").textContent = yData[index].toFixed(2);
+            document.getElementById("z-value").textContent = zData[index].toFixed(2);
+            document.getElementById("feature-count").textContent = featureCountData[index];
+            document.getElementById("quality-value").textContent = qualityData[index];
+        }
+
+        window.onload = loadFiles;
+
+    </script>
+
+    
+</body>
+</html>

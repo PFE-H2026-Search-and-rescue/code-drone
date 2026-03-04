@@ -1,0 +1,8 @@
+Package: voxl-portal
+Version: 0.7.11
+Section: base
+Priority: optional
+Architecture: arm64
+Depends: libmodal-pipe(>=2.10.0),libmodal-json,libvoxl-cutils,voxl-jpeg-turbo,voxl-mongoose(>=7.7.0-1),voxl-cpu-monitor, voxl-utils (>= 1.4.1), voxl-mpa-tools (>= 1.1.7)
+Maintainer: modalai.com
+Description: Debug web interface for VOXL
