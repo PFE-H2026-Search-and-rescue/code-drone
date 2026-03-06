@@ -2,7 +2,7 @@
 name = "uav_coordinator"
 version = "0.1.0"
 description = "Unified ROS package for drone coordination, position tracking, camera data, and point cloud processing"
-requires-python = ">=3.12"
+requires-python = "==3.12"
 dependencies = [
     "ros-rclpy>=9.1.2",
     "ros-std-msgs>=5.5.1",
