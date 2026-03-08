@@ -28,6 +28,7 @@ class PFE_Pathfinder {
     this.robot_pose_x = null;
     this.robot_pose_y = null;
     this.robot_pose_y = null;
+    this.robot_path = null;
   }
 
   add_scene_mesh(scene_mesh){
@@ -42,6 +43,17 @@ class PFE_Pathfinder {
   windowResize(height, width){
     this.height = height;
     this.width = width;
+  }
+
+  async send_robot_path(){
+    if(this.robot_path == null){
+        return;
+    }
+
+    const response = await fetch("http://" + baseurl + ":5000/send_path", {
+        method: "POST",
+        body: JSON.stringify(this.robot_path)
+    });
   }
 
   reset_navmesh(){
@@ -71,7 +83,7 @@ class PFE_Pathfinder {
     try {
         const baseurl = window.location.hostname
         console.log(baseurl);
-        const response = await fetch("http://" + baseurl + ":5000");
+        const response = await fetch("http://" + baseurl + ":5000/robot_position");
         const result = await response.json();
 
         if(result.hasOwnProperty("x") && result.hasOwnProperty("y") && result.hasOwnProperty("z") ){
@@ -197,7 +209,13 @@ class PFE_Pathfinder {
         console.log(end_point);
         console.log(end);
         const { path } = navMeshQuery.computePath(start, end);
-        console.log(path.toString())
+        if (array === undefined || array.length == 0) {
+            console.log("No path found");
+            this.robot_path = null;
+            return;
+        }
+
+        this.robot_path = path;
         // draw the path start
 
         this.startMarker = new THREE.Mesh(
