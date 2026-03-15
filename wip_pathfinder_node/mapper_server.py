@@ -17,9 +17,9 @@ class Mapper_Server():
     def send_path(self):
         self.path = request.json
         print(str(self.path))
-        #TODO : publish la path
+        #TODO : publish la path (ne pas oublier de la mettre dans avec le bon up (faire inverse de detection_callback))
 
     def tag_detection_callback(self, value : Point):
         self.robot_position["x"] = value.x
-        self.robot_position["y"] = value.y
-        self.robot_position["z"] = value.z
+        self.robot_position["y"] = value.z
+        self.robot_position["z"] = -value.y

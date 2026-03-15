@@ -50,8 +50,12 @@ class PFE_Pathfinder {
         return;
     }
 
+    const baseurl = window.location.hostname
     const response = await fetch("http://" + baseurl + ":5000/send_path", {
         method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
         body: JSON.stringify(this.robot_path)
     });
   }
@@ -82,7 +86,6 @@ class PFE_Pathfinder {
 
     try {
         const baseurl = window.location.hostname
-        console.log(baseurl);
         const response = await fetch("http://" + baseurl + ":5000/robot_position");
         const result = await response.json();
 
@@ -209,7 +212,7 @@ class PFE_Pathfinder {
         console.log(end_point);
         console.log(end);
         const { path } = navMeshQuery.computePath(start, end);
-        if (array === undefined || array.length == 0) {
+        if (path === undefined || path.length == 0) {
             console.log("No path found");
             this.robot_path = null;
             return;
