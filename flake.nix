@@ -51,6 +51,9 @@
                 ros-core
                 nav-msgs
                 fastrtps
+                rmw-fastrtps-cpp
+                cyclonedds
+                rmw-cyclonedds-cpp
                 # ... other ROS packages
               ];
             })

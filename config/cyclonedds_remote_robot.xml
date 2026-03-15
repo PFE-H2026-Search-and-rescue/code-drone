@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Cyclone DDS config for connecting to a remote robot.
+  Set CYCLONEDDS_URI=file:///path/to/this/file and use the same ROS_DOMAIN_ID on both sides.
+  Replace the Peer address below with your robot's IP (or use the launch file with robot_ip argument).
+-->
+<CycloneDDS xmlns="https://cdr.omg.org/dds/cyclonedds/1.0">
+  <Domain>
+    <Discovery>
+      <Peers>
+        <Peer address="192.168.1.100"/>
+      </Peers>
+    </Discovery>
+  </Domain>
+</CycloneDDS>
