@@ -16,6 +16,7 @@ class Mapper_Server():
     
     def send_path(self):
         self.path = request.json
+        print(str(self.path))
         #TODO : publish la path
 
     def tag_detection_callback(self, value : Point):

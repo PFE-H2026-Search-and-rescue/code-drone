@@ -154,6 +154,8 @@ container2.width = insetWidth;
 container2.height = insetHeight;
 
 //-------PFE-----------
+const pfe_get_path_btn = document.getElementById('get_path_btn');
+const pfe_send_path_btn = document.getElementById('send_path_btn');
 const pfe_pathfinder = new PFE_Pathfinder(window.innerHeight - height_offset, window.innerWidth, height_offset, scene, perspectiveCamera);
 
 window.addEventListener('click', (e) => {
@@ -808,8 +810,7 @@ const reset_vio_btn = document.getElementById('reset_action');
 const clear_paths_btn = document.getElementById('clear_paths');
 
 
-const pfe_call_robot_btn = document.getElementById('call_robot');
-const pfe_send_path_btn = document.getElementById('send_path_btn');
+
 
 
 const cmap_slider = document.getElementById('2d_slider');
@@ -880,7 +881,7 @@ function resetRightButtons() {
     download_map_btn.classList.replace("w3-hide", "w3-show");
     clear_map_btn.classList.replace("w3-hide", "w3-show");
     reset_vio_btn.classList.replace("w3-hide", "w3-show");
-    pfe_call_robot_btn.classList.replace("w3-hide", "w3-show");
+    pfe_get_path_btn.classList.replace("w3-hide", "w3-show");
     pfe_send_path_btn.classList.replace("w3-hide", "w3-show");
 
 
@@ -924,7 +925,7 @@ function hideRightButtons() {
     clear_map_btn.classList.replace("w3-show", "w3-hide");
     reset_vio_btn.classList.replace("w3-show", "w3-hide");
     download_map_btn.classList.replace("w3-show", "w3-hide");
-    pfe_call_robot_btn.classList.replace("w3-show", "w3-hide");
+    pfe_get_path_btn.classList.replace("w3-show", "w3-hide");
     pfe_send_path_btn.classList.replace("w3-show", "w3-hide");
 
 
