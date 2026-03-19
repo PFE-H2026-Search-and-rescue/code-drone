@@ -5,6 +5,7 @@ import threading
 import rclpy
 from mapper_server import Mapper_Server
 from tag_detection_node import Tag_Detection_Node
+from qvio_node import Qvio_Node
 
 app = Flask(__name__)
 cors = CORS(app) # allow CORS for all domains on all routes.
@@ -17,10 +18,13 @@ if __name__ == '__main__':
 
     #ROS2
     rclpy.init()
+    qvio_node = Qvio_Node()
+    qvio_node.set_backend_server(mapper_server)
     tag_detection_node = Tag_Detection_Node()
     tag_detection_node.set_backend_server(mapper_server)
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(tag_detection_node)
+    executor.add_node(qvio_node)
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
 

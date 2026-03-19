@@ -219,6 +219,8 @@ let scene_costmap, scene_mesh, scene_pose_x, scene_pose_y, scene_pose_z,
     scene_ali_ptc0, scene_ali_ptc1, scene_ali_ptc2, scene_ali_ptc3,
     scene_ali_ptc4, scene_ali_ptc5, scene_ali_ptc6, scene_ali_ptc7, plan_pt;
 
+let scene_qvio_group;
+
 let aligned_pointclouds = [scene_ali_ptc0, scene_ali_ptc1, scene_ali_ptc2, scene_ali_ptc3,
     scene_ali_ptc4, scene_ali_ptc5, scene_ali_ptc6, scene_ali_ptc7];
 
@@ -505,9 +507,9 @@ function connect_pose() {
     };
 
     pose_ws.onmessage = function (evt) {
-        scene.remove(scene_pose_x);
-        scene.remove(scene_pose_y);
-        scene.remove(scene_pose_z);
+        if(scene_qvio_group != null){
+            scene.remove(scene_qvio_group);
+        }
 
         if (pose_btn.classList.contains("w3-green") && three_d.classList.contains("w3-blue-grey")) {
             var received_msg = evt.data;
@@ -557,9 +559,13 @@ function connect_pose() {
             scene_pose_y = new THREE.Line(geometry_y, green_material);
             scene_pose_z = new THREE.Line(geometry_z, blue_material);
 
-            scene.add(scene_pose_x);
-            scene.add(scene_pose_y);
-            scene.add(scene_pose_z);
+            scene_qvio_group = new THREE.Group()
+            scene_qvio_group.add(scene_pose_x);
+            scene_qvio_group.add(scene_pose_y);
+            scene_qvio_group.add(scene_pose_z);
+            
+            scene_qvio_group.rotateX(Math.PI / 2);
+            scene.add(scene_qvio_group);
 
             if (fpv_mode)
             {
