@@ -60,6 +60,28 @@ class PFE_Pathfinder {
     });
   }
 
+  async add_robot_calibration_point(){
+    if(this.robot_path == null){
+        return;
+    }
+
+    const baseurl = window.location.hostname
+    const response = await fetch("http://" + baseurl + ":5000/add_calibration_point", {
+        method: "POST"
+    });
+  }
+
+  async calibrate_robot(){
+    if(this.robot_path == null){
+        return;
+    }
+
+    const baseurl = window.location.hostname
+    const response = await fetch("http://" + baseurl + ":5000/calibrate", {
+        method: "POST"
+    });
+  }
+
   reset_navmesh(){
     if(this.debugDrawer != null){
         this.scene.remove(this.debugDrawer);

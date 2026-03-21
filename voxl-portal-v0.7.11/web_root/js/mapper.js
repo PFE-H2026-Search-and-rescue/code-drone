@@ -156,6 +156,9 @@ container2.height = insetHeight;
 //-------PFE-----------
 const pfe_get_path_btn = document.getElementById('get_path_btn');
 const pfe_send_path_btn = document.getElementById('send_path_btn');
+const pfe_add_calibration_point_btn = document.getElementById('add_calibration_point_btn');
+const pfe_calibrate_btn = document.getElementById('calibrate_btn');
+
 const pfe_pathfinder = new PFE_Pathfinder(window.innerHeight - height_offset, window.innerWidth, height_offset, scene, perspectiveCamera);
 
 window.addEventListener('click', (e) => {
@@ -167,6 +170,14 @@ var intervalId = window.setInterval(async function(){
 }, 2000);
 
 pfe_send_path_btn.addEventListener("click", () => {
+    pfe_pathfinder.send_robot_path();
+})
+
+pfe_add_calibration_point_btn.addEventListener("click", () => {
+    pfe_pathfinder.add_robot_calibration_point();
+})
+
+pfe_calibrate_btn.addEventListener("click", () => {
     pfe_pathfinder.send_robot_path();
 })
 //----------------------
@@ -889,7 +900,8 @@ function resetRightButtons() {
     reset_vio_btn.classList.replace("w3-hide", "w3-show");
     pfe_get_path_btn.classList.replace("w3-hide", "w3-show");
     pfe_send_path_btn.classList.replace("w3-hide", "w3-show");
-
+    pfe_add_calibration_point_btn.classList.replace("w3-hide", "w3-show");
+    pfe_calibrate_btn.classList.replace("w3-hide", "w3-show");
 
     save_form.style.display = 'none';
     load_form.style.display = 'none';
@@ -933,7 +945,8 @@ function hideRightButtons() {
     download_map_btn.classList.replace("w3-show", "w3-hide");
     pfe_get_path_btn.classList.replace("w3-show", "w3-hide");
     pfe_send_path_btn.classList.replace("w3-show", "w3-hide");
-
+    pfe_add_calibration_point_btn.classList.replace("w3-show", "w3-hide");
+    pfe_calibrate_btn.classList.replace("w3-show", "w3-hide");
 
     save_form.style.display = 'none';
     load_form.style.display = 'none';

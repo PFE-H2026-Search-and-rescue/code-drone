@@ -16,16 +16,16 @@ from os import wait
 
 import rclpy
 from rclpy.node import Node
-
+from std_msgs.msg import String
 from geometry_msgs.msg import PoseStamped
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, LivelinessPolicy, HistoryPolicy
 
 
-class Tag_Detection_Node(Node):
+class Path_Publisher_Node(Node):
     web_viewer = None
 
     def __init__(self):
-        super().__init__('tag_detection_node')
+        super().__init__('path_publisher_node')
         qos_profile = QoSProfile(
         reliability=ReliabilityPolicy.BEST_EFFORT,
         durability=DurabilityPolicy.VOLATILE,
@@ -33,16 +33,9 @@ class Tag_Detection_Node(Node):
         depth=5,
         history=HistoryPolicy.KEEP_LAST
                                                                                     )
-        self.subscription = self.create_subscription(
-            PoseStamped,
-            '/tag_detections',
-            self.point_cloud_callback,
-            qos_profile=qos_profile)
+        
+        #TODO : Les bons params
+        self.publisher_ = self.create_publisher(String, 'le_topic_du_robot', 10, qos_profile=qos_profile)
 
-        self.get_logger().info('qvio node started')
 
-    def set_backend_server(self, backend_server):
-        self.backend_server = backend_server
-
-    def point_cloud_callback(self, msg : PoseStamped):
-        self.backend_server.tag_detection_callback(msg.pose)
+        self.get_logger().info('robot path node started')

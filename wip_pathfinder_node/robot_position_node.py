@@ -21,11 +21,11 @@ from geometry_msgs.msg import PoseStamped
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, LivelinessPolicy, HistoryPolicy
 
 
-class Tag_Detection_Node(Node):
+class Robot_Position_Node(Node):
     web_viewer = None
 
     def __init__(self):
-        super().__init__('tag_detection_node')
+        super().__init__('robot_position_node')
         qos_profile = QoSProfile(
         reliability=ReliabilityPolicy.BEST_EFFORT,
         durability=DurabilityPolicy.VOLATILE,
@@ -35,14 +35,17 @@ class Tag_Detection_Node(Node):
                                                                                     )
         self.subscription = self.create_subscription(
             PoseStamped,
-            '/tag_detections',
+            '/odom_rf2o',
             self.point_cloud_callback,
             qos_profile=qos_profile)
 
-        self.get_logger().info('qvio node started')
+        self.get_logger().info('robot position node started')
 
     def set_backend_server(self, backend_server):
         self.backend_server = backend_server
 
     def point_cloud_callback(self, msg : PoseStamped):
-        self.backend_server.tag_detection_callback(msg.pose)
+        
+        self.get_logger().info("callback received")
+        self.get_logger().info(str(msg.pose.position))
+        self.backend_server.robot_local_position_callback(msg.pose.position)
