@@ -45,4 +45,4 @@ class Tag_Detection_Node(Node):
         self.backend_server = backend_server
 
     def point_cloud_callback(self, msg : PoseStamped):
-        self.backend_server.tag_detection_callback(msg.pose)
+        self.backend_server.tag_detection_callback(msg.pose.position)

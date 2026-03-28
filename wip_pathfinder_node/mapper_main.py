@@ -22,7 +22,7 @@ if __name__ == '__main__':
     path_publisher_node = Path_Publisher_Node()
 
     
-    mapper_server = Mapper_Server();
+    mapper_server = Mapper_Server(path_publisher_node);
 
     #ROS2
     
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     executor.add_node(tag_detection_node)
     executor.add_node(qvio_node)
     executor.add_node(robot_position_node)
-    executor.add_node(path_publisher_node)
+    # executor.add_node(path_publisher_node)
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
 

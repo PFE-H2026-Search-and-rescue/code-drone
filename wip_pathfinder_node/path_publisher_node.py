@@ -25,6 +25,7 @@ class Path_Publisher_Node(Node):
     web_viewer = None
 
     def __init__(self):
+        return;
         super().__init__('path_publisher_node')
         qos_profile = QoSProfile(
         reliability=ReliabilityPolicy.BEST_EFFORT,

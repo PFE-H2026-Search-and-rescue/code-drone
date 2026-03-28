@@ -178,7 +178,7 @@ pfe_add_calibration_point_btn.addEventListener("click", () => {
 })
 
 pfe_calibrate_btn.addEventListener("click", () => {
-    pfe_pathfinder.send_robot_path();
+    pfe_pathfinder.calibrate_robot();
 })
 //----------------------
 
