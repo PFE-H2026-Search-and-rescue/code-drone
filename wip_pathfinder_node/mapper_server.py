@@ -63,24 +63,25 @@ class Mapper_Server():
         print(str(self.path), flush=True)
 
     def add_calibration_point(self): 
-        print("what", flush=True)
         try:
             _ = self.drone_coordinate_system.shape
             self.drone_coordinate_system = add_to_matrix(self.robot_tag_position,self.drone_coordinate_system)
             print("Success", flush=True)
         except Exception as e:
             print(e)
-            self.drone_coordinate_system = np.array([[self.robot_tag_position["x"]], [self.robot_tag_position["y"]], [self.robot_tag_position["z"]]])
+            self.drone_coordinate_system = np.array([self.robot_tag_position["x"], self.robot_tag_position["y"], self.robot_tag_position["z"]])
         
         try:
             _ = self.robot_coordinate_system.shape
-            self.robot_coordinate_system = add_to_matrix(self.robot_tag_position,self.robot_coordinate_system)
+            self.robot_coordinate_system = add_to_matrix(self.robot_local_position,self.robot_coordinate_system)
         except:
-            self.robot_coordinate_system = np.array([[self.robot_local_position["x"]], [self.robot_local_position["y"]], [self.robot_local_position["z"]]])
+            self.robot_coordinate_system = np.array([self.robot_local_position["x"], self.robot_local_position["y"], self.robot_local_position["z"]])
 
         return "true"
 
     def generate_transform_matrix(self):
+        print(self.drone_coordinate_system, flush=True)
+        print(self.robot_coordinate_system, flush=True)
         self.conversion_matrix_from_robot = get_3d_transform(self.robot_coordinate_system, self.drone_coordinate_system)
         self.conversion_matrix_to_robot = get_3d_transform(self.drone_coordinate_system, self.robot_coordinate_system)
         print(self.conversion_matrix_from_robot, flush=True)
@@ -117,6 +118,9 @@ class Mapper_Server():
         self.robot_tag_position["x"] = rotated_vectors[0][0]
         self.robot_tag_position["y"] = rotated_vectors[0][1]
         self.robot_tag_position["z"] = rotated_vectors[0][2]
+
+        if(self.robot_local_position["x"] != 0):
+            self.add_calibration_point()
 
         self.convert_robot_position(True);
 

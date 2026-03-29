@@ -35,7 +35,7 @@ class Robot_Position_Node(Node):
                                                                                     )
         self.subscription = self.create_subscription(
             Odometry,
-            '/odom',
+            '/odom_rf2o',
             self.point_cloud_callback,
             qos_profile=qos_profile)
 

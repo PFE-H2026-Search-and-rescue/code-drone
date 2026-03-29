@@ -44,5 +44,5 @@ def convert_from_object_to_vector3(vector_size, object):
 
 def add_to_matrix(vector, matrix):
     vector_array = convert_from_object_to_vector3(3, vector)
-    matrix = np.c_[matrix, vector_array] 
+    matrix = np.vstack((matrix, vector_array)) 
     return matrix
