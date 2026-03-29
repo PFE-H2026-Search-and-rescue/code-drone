@@ -4,7 +4,9 @@ from geometry_msgs.msg import Point
 from flask import request
 import numpy as np
 from scipy.spatial.transform import Rotation
-from spatial_transforms import add_to_matrix, convert_from_object_to_vector3, get_3d_transform
+from spatial_transforms import add_to_matrix, transform_point, estimate_transform
+
+
 
 class Mapper_Server():
     def __init__(self, path_publish_node):
@@ -46,16 +48,18 @@ class Mapper_Server():
         self.robot_coordinate_system = None
         self.path_publish_node = path_publish_node
         
+    
     def get_robot_position(self):
         return self.robot_true_position
     
     def send_path(self):
         self.path = request.json
         if(len(self.path) > 1):
-            path_vector = convert_from_object_to_vector3(4, self.path[1]) 
-            new_path_vector = self.conversion_matrix_to_robot @ path_vector
+            pass
+            # path_vector = convert_from_object_to_vector3(4, self.path[1]) 
+            # new_path_vector = self.conversion_matrix_to_robot @ path_vector
             
-            print(new_path_vector)
+            # print(new_path_vector)
             #TODO : Convert dans le bon data type
             # self.path_publish_node.publisher.publish(new_path_vector)
         
@@ -63,28 +67,40 @@ class Mapper_Server():
         print(str(self.path), flush=True)
 
     def add_calibration_point(self): 
-        print("what", flush=True)
+        # print("what", flush=True)
         try:
             _ = self.drone_coordinate_system.shape
-            self.drone_coordinate_system = add_to_matrix(self.robot_tag_position,self.drone_coordinate_system)
+            self.drone_coordinate_system = add_to_matrix(self.robot_tag_position,self.drone_coordinate_system, True)
             print("Success", flush=True)
         except Exception as e:
             print(e)
-            self.drone_coordinate_system = np.array([[self.robot_tag_position["x"]], [self.robot_tag_position["y"]], [self.robot_tag_position["z"]]])
+            self.drone_coordinate_system = np.array([self.robot_tag_position["x"], self.robot_tag_position["z"]])
         
         try:
             _ = self.robot_coordinate_system.shape
-            self.robot_coordinate_system = add_to_matrix(self.robot_tag_position,self.robot_coordinate_system)
+            self.robot_coordinate_system = add_to_matrix(self.robot_local_position,self.robot_coordinate_system, False)
         except:
-            self.robot_coordinate_system = np.array([[self.robot_local_position["x"]], [self.robot_local_position["y"]], [self.robot_local_position["z"]]])
+            self.robot_coordinate_system = np.array([self.robot_local_position["x"], self.robot_local_position["y"]])
 
         return "true"
 
     def generate_transform_matrix(self):
-        self.conversion_matrix_from_robot = get_3d_transform(self.robot_coordinate_system, self.drone_coordinate_system)
-        self.conversion_matrix_to_robot = get_3d_transform(self.drone_coordinate_system, self.robot_coordinate_system)
+        print(self.robot_coordinate_system, flush=True)
+        print(self.drone_coordinate_system, flush=True)
+
+        self.conversion_matrix_to_robot = estimate_transform(self.drone_coordinate_system, self.robot_coordinate_system)
+        self.conversion_matrix_from_robot =  estimate_transform(self.robot_coordinate_system, self.drone_coordinate_system)
+                
+        # self.conversion_matrix_from_robot = get_3d_transform(self.robot_coordinate_system, self.drone_coordinate_system)
+        # self.conversion_matrix_to_robot = get_3d_transform(self.drone_coordinate_system, self.robot_coordinate_system)
+        
         print(self.conversion_matrix_from_robot, flush=True)
         print(self.conversion_matrix_to_robot, flush=True)
+        print(str(self.robot_local_position))
+        new_x, new_y = transform_point(self.conversion_matrix_from_robot, self.robot_local_position["x"], self.robot_local_position["y"])
+        print(str(new_x) + str(new_y))
+        old_x, old_y = transform_point(self.conversion_matrix_to_robot, new_x, new_y)
+        print(str(old_x) + str(old_y), flush=True);
         return "true";
 
 
@@ -118,7 +134,12 @@ class Mapper_Server():
         self.robot_tag_position["y"] = rotated_vectors[0][1]
         self.robot_tag_position["z"] = rotated_vectors[0][2]
 
+
+        if(self.robot_local_position["x"] != 0):
+            self.add_calibration_point()
         self.convert_robot_position(True);
+    
+
 
     def drone_qvio_callback(self, value : Pose):
         self.drone_position["x"] = value.position.x
@@ -141,13 +162,16 @@ class Mapper_Server():
         # self.robot_local_position["qw"] = value.orientation.w
 
     def convert_robot_position(self, from_tag):
+        #Robot = z up
+        #tag = y up
         try:
             _ = self.conversion_matrix_from_robot.shape
             if(from_tag == False):
-                new_position = self.conversion_matrix_from_robot @ convert_from_object_to_vector3(4, self.robot_local_position)
-                self.robot_true_position["x"] = new_position[0]
-                self.robot_true_position["y"] = new_position[1]
-                self.robot_true_position["z"] = new_position[2]
+                new_x, new_y = transform_point(self.conversion_matrix_from_robot, self.robot_local_position["x"], self.robot_local_position["y"])
+                
+                self.robot_true_position["x"] = new_x
+                self.robot_true_position["z"] = new_y
+                print(str(self.robot_local_position), flush=True)
                 print(str(self.robot_true_position), flush=True)
 
         except Exception as e:
