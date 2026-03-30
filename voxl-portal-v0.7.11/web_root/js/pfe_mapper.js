@@ -28,6 +28,7 @@ class PFE_Pathfinder {
     this.robot_pose_x = null;
     this.robot_pose_y = null;
     this.robot_pose_y = null;
+    this.robot_path = null;
   }
 
   add_scene_mesh(scene_mesh){
@@ -42,6 +43,43 @@ class PFE_Pathfinder {
   windowResize(height, width){
     this.height = height;
     this.width = width;
+  }
+
+  async send_robot_path(){
+    if(this.robot_path == null){
+        return;
+    }
+
+    const baseurl = window.location.hostname
+    const response = await fetch("http://" + baseurl + ":5000/send_path", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(this.robot_path)
+    });
+  }
+
+  async add_robot_calibration_point(){
+    if(this.robot_path == null){
+        return;
+    }
+
+    const baseurl = window.location.hostname
+    const response = await fetch("http://" + baseurl + ":5000/add_calibration_point", {
+        method: "POST"
+    });
+  }
+
+  async calibrate_robot(){
+    if(this.robot_path == null){
+        return;
+    }
+
+    const baseurl = window.location.hostname
+    const response = await fetch("http://" + baseurl + ":5000/calibrate", {
+        method: "POST"
+    });
   }
 
   reset_navmesh(){
@@ -64,13 +102,35 @@ class PFE_Pathfinder {
     }
   }
 
-  update_robot_position(){
-    this.robotPosition.x += 0.2;
-    this.robotPosition.y = 0;
-    this.robotPosition.z = 0;
+  async update_robot_position(){
+    
+    let success = false;
 
-    //TODO : Faire en sorte qu'il le pogne du serveur
+    try {
+        const baseurl = window.location.hostname
+        const response = await fetch("http://" + baseurl + ":5000/robot_position");
+        const result = await response.json();
 
+        if(result.hasOwnProperty("x") && result.hasOwnProperty("y") && result.hasOwnProperty("z") ){
+            if(!(isNaN(result["x"]) || isNaN(result["y"]) || isNaN(result["z"]))){
+                this.robotPosition.x = result["x"];
+                this.robotPosition.y = result["y"];
+                this.robotPosition.z = result["z"];
+                success = true
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        return;
+    }
+
+
+    if(success != true){
+        console.log("Failed to get robot position");
+        return;
+    }
+
+    console.log(this.robotPosition);
     if(this.robot_pose_x != null) this.scene.remove(this.robot_pose_x);
     if(this.robot_pose_y != null) this.scene.remove(this.robot_pose_y);
     if(this.robot_pose_z != null) this.scene.remove(this.robot_pose_z);
@@ -174,7 +234,13 @@ class PFE_Pathfinder {
         console.log(end_point);
         console.log(end);
         const { path } = navMeshQuery.computePath(start, end);
-        console.log(path.toString())
+        if (path === undefined || path.length == 0) {
+            console.log("No path found");
+            this.robot_path = null;
+            return;
+        }
+
+        this.robot_path = path;
         // draw the path start
 
         this.startMarker = new THREE.Mesh(

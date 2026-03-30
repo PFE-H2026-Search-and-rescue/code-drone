@@ -154,15 +154,32 @@ container2.width = insetWidth;
 container2.height = insetHeight;
 
 //-------PFE-----------
+const pfe_get_path_btn = document.getElementById('get_path_btn');
+const pfe_send_path_btn = document.getElementById('send_path_btn');
+const pfe_add_calibration_point_btn = document.getElementById('add_calibration_point_btn');
+const pfe_calibrate_btn = document.getElementById('calibrate_btn');
+
 const pfe_pathfinder = new PFE_Pathfinder(window.innerHeight - height_offset, window.innerWidth, height_offset, scene, perspectiveCamera);
 
 window.addEventListener('click', (e) => {
     pfe_pathfinder.windowClick_eventListener(e);
 })
 
-var intervalId = window.setInterval(function(){
+var intervalId = window.setInterval(async function(){
     pfe_pathfinder.update_robot_position();
 }, 2000);
+
+pfe_send_path_btn.addEventListener("click", () => {
+    pfe_pathfinder.send_robot_path();
+})
+
+pfe_add_calibration_point_btn.addEventListener("click", () => {
+    pfe_pathfinder.add_robot_calibration_point();
+})
+
+pfe_calibrate_btn.addEventListener("click", () => {
+    pfe_pathfinder.calibrate_robot();
+})
 //----------------------
 
 animate();
@@ -212,6 +229,8 @@ let costmap_ws, mesh_ws, plan_ws, ptcloud_ws, pose_ws;
 let scene_costmap, scene_mesh, scene_pose_x, scene_pose_y, scene_pose_z,
     scene_ali_ptc0, scene_ali_ptc1, scene_ali_ptc2, scene_ali_ptc3,
     scene_ali_ptc4, scene_ali_ptc5, scene_ali_ptc6, scene_ali_ptc7, plan_pt;
+
+let scene_qvio_group;
 
 let aligned_pointclouds = [scene_ali_ptc0, scene_ali_ptc1, scene_ali_ptc2, scene_ali_ptc3,
     scene_ali_ptc4, scene_ali_ptc5, scene_ali_ptc6, scene_ali_ptc7];
@@ -499,9 +518,9 @@ function connect_pose() {
     };
 
     pose_ws.onmessage = function (evt) {
-        scene.remove(scene_pose_x);
-        scene.remove(scene_pose_y);
-        scene.remove(scene_pose_z);
+        if(scene_qvio_group != null){
+            scene.remove(scene_qvio_group);
+        }
 
         if (pose_btn.classList.contains("w3-green") && three_d.classList.contains("w3-blue-grey")) {
             var received_msg = evt.data;
@@ -551,9 +570,13 @@ function connect_pose() {
             scene_pose_y = new THREE.Line(geometry_y, green_material);
             scene_pose_z = new THREE.Line(geometry_z, blue_material);
 
-            scene.add(scene_pose_x);
-            scene.add(scene_pose_y);
-            scene.add(scene_pose_z);
+            scene_qvio_group = new THREE.Group()
+            scene_qvio_group.add(scene_pose_x);
+            scene_qvio_group.add(scene_pose_y);
+            scene_qvio_group.add(scene_pose_z);
+            
+            scene_qvio_group.rotateX(Math.PI / 2);
+            scene.add(scene_qvio_group);
 
             if (fpv_mode)
             {
@@ -804,7 +827,7 @@ const reset_vio_btn = document.getElementById('reset_action');
 const clear_paths_btn = document.getElementById('clear_paths');
 
 
-const pfe_call_robot_btn = document.getElementById('call_robot')
+
 
 
 const cmap_slider = document.getElementById('2d_slider');
@@ -875,8 +898,10 @@ function resetRightButtons() {
     download_map_btn.classList.replace("w3-hide", "w3-show");
     clear_map_btn.classList.replace("w3-hide", "w3-show");
     reset_vio_btn.classList.replace("w3-hide", "w3-show");
-    pfe_call_robot_btn.classList.replace("w3-hide", "w3-show");
-
+    pfe_get_path_btn.classList.replace("w3-hide", "w3-show");
+    pfe_send_path_btn.classList.replace("w3-hide", "w3-show");
+    pfe_add_calibration_point_btn.classList.replace("w3-hide", "w3-show");
+    pfe_calibrate_btn.classList.replace("w3-hide", "w3-show");
 
     save_form.style.display = 'none';
     load_form.style.display = 'none';
@@ -918,8 +943,10 @@ function hideRightButtons() {
     clear_map_btn.classList.replace("w3-show", "w3-hide");
     reset_vio_btn.classList.replace("w3-show", "w3-hide");
     download_map_btn.classList.replace("w3-show", "w3-hide");
-    pfe_call_robot_btn.classList.replace("w3-show", "w3-hide");
-
+    pfe_get_path_btn.classList.replace("w3-show", "w3-hide");
+    pfe_send_path_btn.classList.replace("w3-show", "w3-hide");
+    pfe_add_calibration_point_btn.classList.replace("w3-show", "w3-hide");
+    pfe_calibrate_btn.classList.replace("w3-show", "w3-hide");
 
     save_form.style.display = 'none';
     load_form.style.display = 'none';
