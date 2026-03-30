@@ -37,7 +37,8 @@ if __name__ == '__main__':
     executor.add_node(tag_detection_node)
     executor.add_node(qvio_node)
     executor.add_node(robot_position_node)
-    # executor.add_node(path_publisher_node)
+    executor.add_node(send_path_client)
+
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
 
