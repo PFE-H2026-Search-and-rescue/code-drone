@@ -56,11 +56,16 @@ class Mapper_Server():
             new_path_vector = self.conversion_matrix_to_robot @ path_vector
             
             print(new_path_vector)
-            #TODO : Convert dans le bon data type
-            # self.path_publish_node.publisher.publish(new_path_vector)
+            self.path_publish_node.send_goal(new_path_vector[0], new_path_vector[1])
+            
+            #todo : activer un callback chaque x secondes qui détecte si un next élément de l'array est plus proche
+            #et le choisi pour skip. 
         
         
         print(str(self.path), flush=True)
+
+    def cancel_path(self):
+        self.path_publish_node.cancel_goal()
 
     def add_calibration_point(self): 
         try:

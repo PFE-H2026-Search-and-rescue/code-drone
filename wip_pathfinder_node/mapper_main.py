@@ -7,7 +7,7 @@ from mapper_server import Mapper_Server
 from tag_detection_node import Tag_Detection_Node
 from robot_position_node import Robot_Position_Node
 from qvio_node import Qvio_Node
-from path_publisher_node import Path_Publisher_Node
+from send_path_client import SendPathClient
 
 app = Flask(__name__)
 cors = CORS(app) # allow CORS for all domains on all routes.
@@ -19,10 +19,10 @@ if __name__ == '__main__':
     rclpy.init()
 
     #Publishers 
-    path_publisher_node = Path_Publisher_Node()
+    send_path_client = SendPathClient()
 
     
-    mapper_server = Mapper_Server(path_publisher_node);
+    mapper_server = Mapper_Server(send_path_client);
 
     #ROS2
     
