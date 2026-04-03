@@ -72,10 +72,6 @@ class PFE_Pathfinder {
   }
 
   async calibrate_robot(){
-    if(this.robot_path == null){
-        return;
-    }
-
     const baseurl = window.location.hostname
     const response = await fetch("http://" + baseurl + ":5000/calibrate", {
         method: "POST"
