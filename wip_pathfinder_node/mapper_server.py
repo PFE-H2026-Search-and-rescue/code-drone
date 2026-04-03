@@ -81,12 +81,22 @@ class Mapper_Server():
         print(str(self.path), flush=True)
 
     def update_path(self):
-        current_distance = abs(self.path[0]["x"] - self.robot_true_position["x"]) + abs(self.path[0]["z"] - self.robot_true_position["z"]) 
-        index = len(self.path) - 1
-
         if(len(self.path) <= 0):
             self.path_scheduler.shutdown()
             return
+        
+        current_distance = abs(self.path[0]["x"] - self.robot_true_position["x"]) + abs(self.path[0]["z"] - self.robot_true_position["z"]) 
+        if(current_distance < 2):
+            self.path.pop(0)
+            self.cancel_path()
+            path_vector = convert_from_object_to_vector3(4, self.path[0]) 
+            new_path_vector = self.conversion_matrix_to_robot @ path_vector
+            
+            print(new_path_vector)
+            self.path_publish_node.send_goal(new_path_vector[0], new_path_vector[1])
+            return
+
+        index = len(self.path) - 1
 
         for point in reversed(self.path):
             if(index == len(self.path) - 1):
