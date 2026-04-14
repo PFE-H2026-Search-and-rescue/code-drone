@@ -4,6 +4,7 @@ from rclpy.action import ActionClient
 from nav2_msgs.action import NavigateToPose
 
 class SendPathClient(Node):
+    
     def __init__(self):
         super().__init__('sendPath_action_client')
         self.action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
@@ -25,4 +26,5 @@ class SendPathClient(Node):
         return self.action_client.cancel_goal_async()
 
     def feedback_callback(self, feedback_msg):
-        self.get_logger().info(f'Received feedback: {feedback_msg.feedback}')
+        pass
+        #self.get_logger().debug(f'Received feedback: {feedback_msg.feedback}')

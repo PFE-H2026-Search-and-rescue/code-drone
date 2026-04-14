@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libgl1 \
     libgomp1 \
     python3-pip \
+    ros-humble-navigation2 ros-humble-nav2-bringup \
     && rm -rf /var/lib/apt/lists/*
-
 
 COPY requirements.txt ./
 
