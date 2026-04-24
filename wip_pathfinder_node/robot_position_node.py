@@ -18,6 +18,7 @@ import rclpy
 from rclpy.node import Node
 
 from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, LivelinessPolicy, HistoryPolicy
 
 
@@ -34,8 +35,8 @@ class Robot_Position_Node(Node):
         history=HistoryPolicy.KEEP_LAST
                                                                                     )
         self.subscription = self.create_subscription(
-            Odometry,
-            '/odom_rf2o',
+            PoseStamped,
+            '/robot_pose',
             self.point_cloud_callback,
             qos_profile=qos_profile)
 
@@ -44,8 +45,8 @@ class Robot_Position_Node(Node):
     def set_backend_server(self, backend_server):
         self.backend_server = backend_server
 
-    def point_cloud_callback(self, msg : Odometry):
+    def point_cloud_callback(self, msg : PoseStamped):
         
         # self.get_logger().info("callback received")
         # self.get_logger().info(str(msg.pose.pose.position))
-        self.backend_server.robot_local_position_callback(msg.pose.pose.position)
+        self.backend_server.robot_local_position_callback(msg.pose.position)
