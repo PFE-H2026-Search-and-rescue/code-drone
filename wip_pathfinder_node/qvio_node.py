@@ -45,7 +45,4 @@ class Qvio_Node(Node):
         self.backend_server = backend_server
 
     def qvio_callback(self, msg : PoseStamped):
-        
-        # self.get_logger().info("callback received")
-        # self.get_logger().info(str(msg.pose.position))
         self.backend_server.drone_qvio_callback(msg.pose)
