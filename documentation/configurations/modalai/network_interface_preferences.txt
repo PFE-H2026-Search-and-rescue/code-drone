@@ -1,0 +1,11 @@
+# List the order of priority of network interfaces here.
+# Top is most important
+# Bottom is least important
+
+tun0
+eth0
+usb0
+wlan0
+wwan0
+
+# end
